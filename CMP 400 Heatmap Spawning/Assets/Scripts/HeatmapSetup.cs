@@ -116,7 +116,7 @@ public class HeatmapSetup : MonoBehaviour
                 if (!Physics.Raycast(ray, 5, tempLayerMask))
                 {
                     // initialises the array if it doesn't collide with an object on the scenery layer
-                    tiles[activeTiles] = new Tiles(rayStart, true);
+                    tiles[activeTiles] = new Tiles(rayStart);
                     activeTiles++;
                 }
             }

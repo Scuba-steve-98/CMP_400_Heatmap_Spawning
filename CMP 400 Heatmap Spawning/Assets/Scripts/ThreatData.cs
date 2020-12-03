@@ -9,19 +9,6 @@ public class ThreatData : MonoBehaviour
     float baseThreatLevel = 75f;
 
 
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     // will be used later for calculating players current threat level
     public void setThreatLevel()
     {
