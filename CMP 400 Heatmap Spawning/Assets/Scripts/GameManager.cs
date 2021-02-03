@@ -4,31 +4,9 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    //public enum TEAMS
-    //{
-    //    ORANGE,
-    //    BLUE,
-    //    RED,
-    //    GREEN,
-    //    PINK,
-    //    PURPLE,
-    //    CYAN,
-    //    BROWN,
-    //    WHITE,
-    //    BLACK,
-    //    MAGENTA,
-    //    GREY,
-    //    LIME,
-    //    YELLOW
-    //}
-
-    enum GAMETYPE
-    {
-        TEST,
-        FFA,
-        TDM
-    }
-
+    [SerializeField]
+    SPAWN_TYPE spawnType = SPAWN_TYPE.RULE_BASED;
+    
     [SerializeField]
     GAMETYPE gameType = GAMETYPE.TDM;
 
@@ -265,5 +243,11 @@ public class GameManager : MonoBehaviour
         {
             return team2Threat;
         }
+    }
+
+
+    public SPAWN_TYPE getSpawnType()
+    {
+        return spawnType;
     }
 }

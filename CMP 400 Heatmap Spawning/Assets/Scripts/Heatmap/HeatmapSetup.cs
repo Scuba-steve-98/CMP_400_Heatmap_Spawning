@@ -13,12 +13,17 @@ public class HeatmapSetup : MonoBehaviour
     Vector3 planeSize, bottomLeft, rayStart, defaultVec;
 
     Tiles[] tiles;
-    Tiles[] possibleSpawnAreas;
+    PossibleSpawns[] possibleFFASpawnAreas;
+    PossibleSpawns[] possibleP1SpawnAreas;
+    PossibleSpawns[] possibleP2SpawnAreas;
 
     GameManager gameManager_;
 
     [SerializeField, Range(0, 1)]
     int team = 0;
+
+    [SerializeField, Range(0, 75)]
+    float targetThreatValue = 32;
 
     // Start is called before the first frame update
     void Start()
@@ -39,15 +44,26 @@ public class HeatmapSetup : MonoBehaviour
         bredth = (int)planeSize.z / scale;
         bottomLeft = gameObject.transform.position - (planeSize / 2);
         gameManager_ = FindObjectOfType<GameManager>().GetComponent<GameManager>();
-        possibleSpawnAreas = new Tiles[10];
-        //Array.Sort<Tiles>(tiles, delegate (Tiles x, Tiles y) { return x.closenessToTarget.CompareTo(y.closenessToTarget); });
-        // call function to activate tiles
-        setHeatmapUp();
+        possibleFFASpawnAreas = new PossibleSpawns[10];
+        possibleP1SpawnAreas = new PossibleSpawns[10];
+        possibleP2SpawnAreas = new PossibleSpawns[10];
+
+        for (int i = 0; i < 10; i++)
+        {
+            possibleFFASpawnAreas[i] = new PossibleSpawns();
+            possibleP1SpawnAreas[i] = new PossibleSpawns();
+            possibleP2SpawnAreas[i] = new PossibleSpawns();
+        }
+
+            // call function to activate tiles
+            setHeatmapUp();
     }
 
     // Update is called once per frame
     void Update()
     {
+        resetArrays();
+
         // loops through for the number of active tiles
         for (int i = 0; i < activeTiles; i++)
         {
@@ -95,7 +111,6 @@ public class HeatmapSetup : MonoBehaviour
 
                             team2Threat += Mathf.Lerp(threat, 0, distance / (colliderRadius / 2f));
                             team2Friendly += Mathf.Lerp(friendly, 0, distance / (colliderRadius / 2f));
-                            Debug.Log(team2Threat);
                         }
                     }
                     else
@@ -114,11 +129,38 @@ public class HeatmapSetup : MonoBehaviour
             if (gameManager_.isTDM())
             {
                 tiles[i].setValues(team1Threat, team2Threat, team1Friendly, team2Friendly);
+                float close = Mathf.Abs(team1Threat - targetThreatValue);
+                close = possibleP1SpawnAreas[9].getCloseness();
+                if (close < possibleP1SpawnAreas[9].getCloseness())
+                {
+                    possibleP1SpawnAreas[9].setCloseness(close);
+                    possibleP1SpawnAreas[9].setLocation(tiles[i].getLocation());
+                    Array.Sort<PossibleSpawns>(possibleP1SpawnAreas, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getCloseness().CompareTo(y.getCloseness()); });
+                }
+
+                close = Mathf.Abs(team2Threat - targetThreatValue);
+                if (close < possibleP2SpawnAreas[9].getCloseness())
+                {
+                    possibleP2SpawnAreas[9].setCloseness(close);
+                    possibleP2SpawnAreas[9].setLocation(tiles[i].getLocation());
+                    Array.Sort<PossibleSpawns>(possibleP2SpawnAreas, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getCloseness().CompareTo(y.getCloseness()); });
+                }
             }
             else
             {
                 // stores the threat level for the tile after it has been calculated
                 tiles[i].setValues(threatLevel);
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (gameManager_.getSpawnType() == SPAWN_TYPE.RULE_BASED)
+            {
+                if (gameManager_.isTDM())
+                {
+                    RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
+                    rbss.chooseTDMSpawnLocation(team);
+                }
             }
         }
     }
@@ -174,9 +216,31 @@ public class HeatmapSetup : MonoBehaviour
         }
     }
 
-    public Tiles[] getTiles()
+    void resetArrays()
     {
-        return possibleSpawnAreas;
+        for (int i = 0; i < 10; i++)
+        {
+            possibleFFASpawnAreas[i].setCloseness(150);
+            possibleP1SpawnAreas[i].setCloseness(150);
+            possibleP2SpawnAreas[i].setCloseness(150);
+        }
+    }
+
+    public PossibleSpawns[] getFFATiles()
+    {
+        return possibleFFASpawnAreas;
+    }
+
+    public PossibleSpawns[] getTDMTiles(int team)
+    {
+        if (team == 0)
+        {
+            return possibleP1SpawnAreas;
+        }
+        else
+        {
+            return possibleP2SpawnAreas;
+        }
     }
 
     private void OnDrawGizmos()

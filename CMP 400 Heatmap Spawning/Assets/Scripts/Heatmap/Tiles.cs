@@ -9,7 +9,7 @@ public class Tiles
     float threatLevel, team1Threat, team2Threat, friendly1Level, friendly2Level;
     Vector3 location;
     public float closenessToTarget;
-    
+
     public Tiles(float threat, Vector3 pos)
     {
         threatLevel = threat;
@@ -75,5 +75,15 @@ public class Tiles
     public Vector3 getLocation()
     {
         return location;
+    }
+
+    public void setCloseness(float close)
+    {
+        closenessToTarget = close;
+    }
+
+    public float getCloseness()
+    {
+        return closenessToTarget;
     }
 }

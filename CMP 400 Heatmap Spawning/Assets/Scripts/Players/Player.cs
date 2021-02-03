@@ -5,6 +5,9 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     GameManager gameManager_;
+    RBSpawningSelector rbSpawningSelector;
+    FuzzySpawnSelector fuzzySpawnSelector;
+    CODSpawnSelector codSpawnSelector;
 
     [SerializeField, Range(0, 10)]
     float overallKD;
@@ -22,10 +25,12 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        rbSpawningSelector = FindObjectOfType<RBSpawningSelector>();
         gameManager_ = FindObjectOfType<GameManager>().GetComponent<GameManager>();
         threatLevel = baseThreat;
         friendlyLevel = baseThreat / 2;
-        Debug.Log(threatLevel);
+
+        health = 100;
     }
 
     // Update is called once per frame
