@@ -44,11 +44,11 @@ public class HeatmapSetup : MonoBehaviour
         bredth = (int)planeSize.z / scale;
         bottomLeft = gameObject.transform.position - (planeSize / 2);
         gameManager_ = FindObjectOfType<GameManager>().GetComponent<GameManager>();
-        possibleFFASpawnAreas = new PossibleSpawns[10];
-        possibleP1SpawnAreas = new PossibleSpawns[10];
-        possibleP2SpawnAreas = new PossibleSpawns[10];
+        possibleFFASpawnAreas = new PossibleSpawns[15];
+        possibleP1SpawnAreas = new PossibleSpawns[15];
+        possibleP2SpawnAreas = new PossibleSpawns[15];
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 15; i++)
         {
             possibleFFASpawnAreas[i] = new PossibleSpawns();
             possibleP1SpawnAreas[i] = new PossibleSpawns();
@@ -89,7 +89,6 @@ public class HeatmapSetup : MonoBehaviour
                 {
                     if (gameManager_.isTDM())
                     {
-                        //hit[c].collider.GetComponentInParent<Player>().getTeam()
                         if (hit[c].collider.GetComponentInParent<Player>().getTeam() == 0)
                         {
                             float threat = hit[c].collider.GetComponentInParent<Player>().getThreatLevel();
@@ -99,7 +98,7 @@ public class HeatmapSetup : MonoBehaviour
                             distance = Vector3.Distance(rayStart, hit[c].transform.position);
 
                             team1Threat += Mathf.Lerp(threat, 0, distance / (colliderRadius / 2f));
-                            team1Friendly += Mathf.Lerp(friendly, 0, distance / (colliderRadius / 2f));
+                            team2Friendly += Mathf.Lerp(friendly, 0, distance / (colliderRadius / 2f)) / 2;
                         }
                         else if (hit[c].collider.GetComponentInParent<Player>().getTeam() == 1)
                         {
@@ -110,7 +109,7 @@ public class HeatmapSetup : MonoBehaviour
                             distance = Vector3.Distance(rayStart, hit[c].transform.position);
 
                             team2Threat += Mathf.Lerp(threat, 0, distance / (colliderRadius / 2f));
-                            team2Friendly += Mathf.Lerp(friendly, 0, distance / (colliderRadius / 2f));
+                            team1Friendly += Mathf.Lerp(friendly, 0, distance / (colliderRadius / 2f)) / 2;
                         }
                     }
                     else
@@ -126,23 +125,22 @@ public class HeatmapSetup : MonoBehaviour
                 }
             }
 
-            if (gameManager_.isTDM())
+            if (gameManager_.isTDM() && Input.GetKeyDown(KeyCode.Space))
             {
                 tiles[i].setValues(team1Threat, team2Threat, team1Friendly, team2Friendly);
                 float close = Mathf.Abs(team1Threat - targetThreatValue);
-                close = possibleP1SpawnAreas[9].getCloseness();
-                if (close < possibleP1SpawnAreas[9].getCloseness())
+                if (close < possibleP1SpawnAreas[14].getCloseness())
                 {
-                    possibleP1SpawnAreas[9].setCloseness(close);
-                    possibleP1SpawnAreas[9].setLocation(tiles[i].getLocation());
+                    possibleP1SpawnAreas[14].setCloseness(close);
+                    possibleP1SpawnAreas[14].setLocation(tiles[i].getLocation());
                     Array.Sort<PossibleSpawns>(possibleP1SpawnAreas, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getCloseness().CompareTo(y.getCloseness()); });
                 }
 
                 close = Mathf.Abs(team2Threat - targetThreatValue);
-                if (close < possibleP2SpawnAreas[9].getCloseness())
+                if (close < possibleP2SpawnAreas[14].getCloseness())
                 {
-                    possibleP2SpawnAreas[9].setCloseness(close);
-                    possibleP2SpawnAreas[9].setLocation(tiles[i].getLocation());
+                    possibleP2SpawnAreas[14].setCloseness(close);
+                    possibleP2SpawnAreas[14].setLocation(tiles[i].getLocation());
                     Array.Sort<PossibleSpawns>(possibleP2SpawnAreas, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getCloseness().CompareTo(y.getCloseness()); });
                 }
             }
@@ -218,7 +216,7 @@ public class HeatmapSetup : MonoBehaviour
 
     void resetArrays()
     {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 15; i++)
         {
             possibleFFASpawnAreas[i].setCloseness(150);
             possibleP1SpawnAreas[i].setCloseness(150);
@@ -237,7 +235,7 @@ public class HeatmapSetup : MonoBehaviour
         {
             return possibleP1SpawnAreas;
         }
-        else
+        else 
         {
             return possibleP2SpawnAreas;
         }

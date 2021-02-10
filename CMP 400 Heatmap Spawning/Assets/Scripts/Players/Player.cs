@@ -10,22 +10,26 @@ public class Player : MonoBehaviour
     CODSpawnSelector codSpawnSelector;
 
     [SerializeField, Range(0, 10)]
-    float overallKD;
+    float overallKD = 1;
 
     [SerializeField, Range(0, 10)]
-    float currentKD;
+    float currentKD = 1;
 
     [SerializeField, Range(60, 100)]
-    float baseThreat;
+    float baseThreat = 67;
 
     float health, threatLevel, friendlyLevel;
 
-    int kills, deaths, team;
+    int kills, deaths;
+
+    bool isDead = false;
+
+    public int team;
 
     // Start is called before the first frame update
     void Start()
     {
-        rbSpawningSelector = FindObjectOfType<RBSpawningSelector>();
+        //rbSpawningSelector = FindObjectOfType<RBSpawningSelector>();
         gameManager_ = FindObjectOfType<GameManager>().GetComponent<GameManager>();
         threatLevel = baseThreat;
         friendlyLevel = baseThreat / 2;
@@ -43,6 +47,12 @@ public class Player : MonoBehaviour
     void killedEnemy()
     {
         kills++;
+        updateKD();
+    }
+
+
+    void updateKD()
+    {
         if (deaths == 0)
         {
             if (gameManager_.getGameProgress() < 0.4f)
@@ -69,11 +79,6 @@ public class Player : MonoBehaviour
             //threatLevel += gameManager_.getTeamThreat(team);
         }
     }
-
-    void die()
-    {
-        deaths++;
-    }
     
 
     public void setTeam(int teamNo)
@@ -96,5 +101,18 @@ public class Player : MonoBehaviour
     public float getFriendLevel()
     {
         return friendlyLevel;
+    }
+
+    public bool isShot(float dam)
+    {
+        health -= dam;
+        if (health <= 0)
+        {
+            deaths++;
+            isDead = true;
+            gameObject.SetActive(false);
+            updateKD();
+        }
+        return isDead;
     }
 }

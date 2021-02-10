@@ -37,6 +37,9 @@ public class Tiles
         team2Threat = team2;
         friendly1Level = friend1;
         friendly2Level = friend2;
+
+        team1Threat -= friendly1Level;
+        team2Threat -= friendly2Level;
     }
 
 
