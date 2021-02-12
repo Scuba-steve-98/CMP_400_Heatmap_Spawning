@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class Tiles
 {
-    //int noEnemiesSeen;
-    //float closestEnemy;
     float threatLevel, team1Threat, team2Threat, friendly1Level, friendly2Level;
     Vector3 location;
     public float closenessToTarget;

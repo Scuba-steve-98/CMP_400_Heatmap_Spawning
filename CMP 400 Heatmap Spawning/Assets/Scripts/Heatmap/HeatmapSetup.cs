@@ -7,6 +7,7 @@ public class HeatmapSetup : MonoBehaviour
 {
     //declaring variables
     int width, bredth, layerMask, scale, activeTiles;
+    int numberOfTiles = 15;
 
     float widthTemp, bredthTemp, distance, colliderRadius, threatLevel, team1Threat, team2Threat, team1Friendly, team2Friendly;
 
@@ -44,24 +45,79 @@ public class HeatmapSetup : MonoBehaviour
         bredth = (int)planeSize.z / scale;
         bottomLeft = gameObject.transform.position - (planeSize / 2);
         gameManager_ = FindObjectOfType<GameManager>().GetComponent<GameManager>();
-        possibleFFASpawnAreas = new PossibleSpawns[15];
-        possibleP1SpawnAreas = new PossibleSpawns[15];
-        possibleP2SpawnAreas = new PossibleSpawns[15];
 
-        for (int i = 0; i < 15; i++)
+        /// creates an array of tiles for possible spawns
+        possibleFFASpawnAreas = new PossibleSpawns[numberOfTiles];
+        possibleP1SpawnAreas = new PossibleSpawns[numberOfTiles];
+        possibleP2SpawnAreas = new PossibleSpawns[numberOfTiles];
+
+        // creates the individual tiles variables
+        for (int i = 0; i < numberOfTiles; i++)
         {
             possibleFFASpawnAreas[i] = new PossibleSpawns();
             possibleP1SpawnAreas[i] = new PossibleSpawns();
             possibleP2SpawnAreas[i] = new PossibleSpawns();
         }
 
-            // call function to activate tiles
-            setHeatmapUp();
+        // call function to activate tiles
+        setHeatmapUp();
+    }
+
+
+    private void setHeatmapUp()
+    {
+        // layer mask to only collide with objects on specific layer
+        LayerMask tempLayerMask = 1 << 10;
+
+        // loop through to find number of tiles not under scenery
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < bredth; j++)
+            {
+                // gets location of each of the tiles
+                widthTemp = ((float)i + 0.5f) * scale;
+                bredthTemp = ((float)j + 0.5f) * scale;
+                rayStart = bottomLeft + Vector3.right * widthTemp + Vector3.forward * bredthTemp - Vector3.up * 0.1f;
+
+                // creates the ray that will check if it collides with scenery
+                Ray ray = new Ray(rayStart, Vector3.up);
+                if (!Physics.Raycast(ray, 5, tempLayerMask))
+                {
+                    // increases the value if it collides with an object on the scenery layer
+                    activeTiles++;
+                }
+            }
+        }
+        // creates an array with an index equal to the number of active tiles
+        tiles = new Tiles[activeTiles];
+
+        // resets to use it as an index counter
+        activeTiles = 0;
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < bredth; j++)
+            {
+                // gets location of each of the tiles
+                widthTemp = ((float)i + 0.5f) * scale;
+                bredthTemp = ((float)j + 0.5f) * scale;
+                rayStart = bottomLeft + Vector3.right * widthTemp + Vector3.forward * bredthTemp - Vector3.up * 0.1f;
+
+                // creates the ray that will check if it collides with scenery
+                Ray ray = new Ray(rayStart, Vector3.up);
+                if (!Physics.Raycast(ray, 5, tempLayerMask))
+                {
+                    // initialises the array if it doesn't collide with an object on the scenery layer
+                    tiles[activeTiles] = new Tiles(rayStart);
+                    activeTiles++;
+                }
+            }
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
+        // resets tiles closeness
         resetArrays();
 
         // loops through for the number of active tiles
@@ -129,18 +185,18 @@ public class HeatmapSetup : MonoBehaviour
             {
                 tiles[i].setValues(team1Threat, team2Threat, team1Friendly, team2Friendly);
                 float close = Mathf.Abs(team1Threat - targetThreatValue);
-                if (close < possibleP1SpawnAreas[14].getCloseness())
+                if (close < possibleP1SpawnAreas[numberOfTiles - 1].getCloseness())
                 {
-                    possibleP1SpawnAreas[14].setCloseness(close);
-                    possibleP1SpawnAreas[14].setLocation(tiles[i].getLocation());
+                    possibleP1SpawnAreas[numberOfTiles - 1].setCloseness(close);
+                    possibleP1SpawnAreas[numberOfTiles - 1].setLocation(tiles[i].getLocation());
                     Array.Sort<PossibleSpawns>(possibleP1SpawnAreas, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getCloseness().CompareTo(y.getCloseness()); });
                 }
 
                 close = Mathf.Abs(team2Threat - targetThreatValue);
-                if (close < possibleP2SpawnAreas[14].getCloseness())
+                if (close < possibleP2SpawnAreas[numberOfTiles - 1].getCloseness())
                 {
-                    possibleP2SpawnAreas[14].setCloseness(close);
-                    possibleP2SpawnAreas[14].setLocation(tiles[i].getLocation());
+                    possibleP2SpawnAreas[numberOfTiles - 1].setCloseness(close);
+                    possibleP2SpawnAreas[numberOfTiles - 1].setLocation(tiles[i].getLocation());
                     Array.Sort<PossibleSpawns>(possibleP2SpawnAreas, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getCloseness().CompareTo(y.getCloseness()); });
                 }
             }
@@ -148,6 +204,13 @@ public class HeatmapSetup : MonoBehaviour
             {
                 // stores the threat level for the tile after it has been calculated
                 tiles[i].setValues(threatLevel);
+                float close = Mathf.Abs(threatLevel - targetThreatValue);
+                if (close < possibleFFASpawnAreas[numberOfTiles - 1].getCloseness())
+                {
+                    possibleFFASpawnAreas[numberOfTiles - 1].setCloseness(close);
+                    possibleFFASpawnAreas[numberOfTiles - 1].setLocation(tiles[i].getLocation());
+                    Array.Sort<PossibleSpawns>(possibleFFASpawnAreas, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getCloseness().CompareTo(y.getCloseness()); });
+                }
             }
         }
         if (Input.GetKeyDown(KeyCode.Space))
@@ -159,56 +222,36 @@ public class HeatmapSetup : MonoBehaviour
                     RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
                     rbss.chooseTDMSpawnLocation(team);
                 }
-            }
-        }
-    }
-
-
-    private void setHeatmapUp()
-    {
-        // layer mask to only collide with objects on specific layer
-        LayerMask tempLayerMask = 1 << 10;
-
-        // loop through to find number of tiles not under scenery
-        for (int i = 0; i < width; i++)
-        {
-            for (int j = 0; j < bredth; j++)
-            {
-                // gets location of each of the tiles
-                widthTemp = ((float)i + 0.5f) * scale;
-                bredthTemp = ((float)j + 0.5f) * scale;
-                rayStart = bottomLeft + Vector3.right * widthTemp + Vector3.forward * bredthTemp - Vector3.up * 0.1f;
-
-                // creates the ray that will check if it collides with scenery
-                Ray ray = new Ray(rayStart, Vector3.up);
-                if (!Physics.Raycast(ray, 5, tempLayerMask))
+                else
                 {
-                    // increases the value if it collides with an object on the scenery layer
-                    activeTiles++;
+                    RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
+                    rbss.chooseFFASpawnLocation();
                 }
             }
-        }
-        // creates an array with an index equal to the number of active tiles
-        tiles = new Tiles[activeTiles];
-
-        // resets to use it as an index counter
-        activeTiles = 0;
-        for (int i = 0; i < width; i++)
-        {
-            for (int j = 0; j < bredth; j++)
+            else if (gameManager_.getSpawnType() == SPAWN_TYPE.FUZZY)
             {
-                // gets location of each of the tiles
-                widthTemp = ((float)i + 0.5f) * scale;
-                bredthTemp = ((float)j + 0.5f) * scale;
-                rayStart = bottomLeft + Vector3.right * widthTemp + Vector3.forward * bredthTemp - Vector3.up * 0.1f;
-
-                // creates the ray that will check if it collides with scenery
-                Ray ray = new Ray(rayStart, Vector3.up);
-                if (!Physics.Raycast(ray, 5, tempLayerMask))
+                if (gameManager_.isTDM())
                 {
-                    // initialises the array if it doesn't collide with an object on the scenery layer
-                    tiles[activeTiles] = new Tiles(rayStart);
-                    activeTiles++;
+                    FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
+                    flss.chooseTDMSpawnLocation(team);
+                }
+                else
+                {
+                    FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
+                    flss.chooseFFASpawnLocation();
+                }
+            }
+            else if (gameManager_.getSpawnType() == SPAWN_TYPE.COD)
+            {
+                if (gameManager_.isTDM())
+                {
+                    RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
+                    rbss.chooseTDMSpawnLocation(team);
+                }
+                else
+                {
+                    RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
+                    rbss.chooseFFASpawnLocation();
                 }
             }
         }
@@ -216,7 +259,7 @@ public class HeatmapSetup : MonoBehaviour
 
     void resetArrays()
     {
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < numberOfTiles; i++)
         {
             possibleFFASpawnAreas[i].setCloseness(150);
             possibleP1SpawnAreas[i].setCloseness(150);
@@ -235,7 +278,7 @@ public class HeatmapSetup : MonoBehaviour
         {
             return possibleP1SpawnAreas;
         }
-        else 
+        else
         {
             return possibleP2SpawnAreas;
         }

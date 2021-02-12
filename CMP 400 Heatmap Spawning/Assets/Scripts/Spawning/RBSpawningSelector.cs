@@ -6,7 +6,6 @@ using UnityEngine;
 public class RBSpawningSelector : MonoBehaviour
 {
     PossibleSpawns[] tiles_;
-    PossibleSpawns possibleSpawnLocation;
     HeatmapSetup heatmap_;
     GameManager gameManager_;
     Player[] players_;
@@ -18,6 +17,7 @@ public class RBSpawningSelector : MonoBehaviour
     Vector3 defaultVec;
 
     int noOfPlayers;
+    int numberOfTiles = 15;
 
     int layerMask = 0;
 
@@ -26,7 +26,7 @@ public class RBSpawningSelector : MonoBehaviour
     {
         heatmap_ = FindObjectOfType<HeatmapSetup>();
         gameManager_ = FindObjectOfType<GameManager>();
-        tiles_ = new PossibleSpawns[15];
+        tiles_ = new PossibleSpawns[numberOfTiles];
         defaultVec = new Vector3(1, 0.75f, 1) * 2;
         players_ = FindObjectsOfType<Player>();
         noOfPlayers = players_.Length;
@@ -80,12 +80,12 @@ public class RBSpawningSelector : MonoBehaviour
     {
         tiles_ = heatmap_.getFFATiles();
 
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < numberOfTiles; i++)
         {
             tiles_[i].setSpawn(false);
         }
 
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < numberOfTiles; i++)
         {
             int enemiesSeen = 0;
             float closest = 10000;
@@ -105,6 +105,7 @@ public class RBSpawningSelector : MonoBehaviour
                     }
                 }
             }
+            Debug.Log(enemiesSeen);
             tiles_[i].setEnemiesSeen(enemiesSeen);
             tiles_[i].setClosest(closest);
 
@@ -114,10 +115,33 @@ public class RBSpawningSelector : MonoBehaviour
                 tiles_[i].setSpawn();
                 return;
             }
+        }
 
-            Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getClosest().CompareTo(y.getClosest()); });
-            Array.Reverse(tiles_);
-            Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
+        Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getClosest().CompareTo(y.getClosest()); });
+        Array.Reverse(tiles_);
+        Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
+
+        if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
+        {
+            tiles_[0].setSpawn();
+            return;
+        }
+        else
+        {
+            int x = 0;
+            while (tiles_[x].getEnemiesSeen() == tiles_[x + 1].getEnemiesSeen())
+            {
+                if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
+                {
+                    Debug.Log("yeet");
+                    break;
+                }
+                Debug.Log("none yet");
+                x++;
+            }
+            tiles_[UnityEngine.Random.Range(0, x)].setSpawn();
+            Debug.Log(x);
+            return;
         }
     }
 
@@ -126,7 +150,7 @@ public class RBSpawningSelector : MonoBehaviour
     {
         tiles_ = heatmap_.getTDMTiles(team);
 
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < numberOfTiles; i++)
         {
             tiles_[i].setSpawn(false);
         }
@@ -142,7 +166,7 @@ public class RBSpawningSelector : MonoBehaviour
             friendly_ = team1_;
         }
 
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < numberOfTiles; i++)
         {
             int enemiesSeen = 0;
             int friendliesSeen = 0;
@@ -187,6 +211,7 @@ public class RBSpawningSelector : MonoBehaviour
             if (enemiesSeen == 0)
             {
                 tiles_[i].setSpawn();
+                Debug.Log("Found");
                 return;
             }
         }
@@ -199,95 +224,39 @@ public class RBSpawningSelector : MonoBehaviour
         Array.Reverse(tiles_);
         Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
 
-        int a = 0;
-        while (tiles_[a].getEnemiesSeen() != tiles_[a + 1].getEnemiesSeen())
+        if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
         {
-            if (tiles_[a].getClosest() > tiles_[a + 1].getClosest() && a == 0)
-            {
-                if (a == 0)
-                {
-                    tiles_[a].setSpawn();
-                    return;
-                }
-                else
-                {
-                    tiles_[UnityEngine.Random.Range(0, a)].setSpawn();
-                    return;
-                }
-            }
-            else if (tiles_[a].getFriendliesSeen() > tiles_[a + 1].getFriendliesSeen() && a == 0)
-            {
-                if (a == 0)
-                {
-                    tiles_[a].setSpawn();
-                    return;
-                }
-                else
-                {
-                    tiles_[UnityEngine.Random.Range(0, a)].setSpawn();
-                    return;
-                }
-            }
-            else if (tiles_[a].getClosestFriendly() < tiles_[a + 1].getClosestFriendly() && a == 0)
-            {
-                if (a == 0)
-                {
-                    tiles_[a].setSpawn();
-                    return;
-                }
-                else
-                {
-                    tiles_[UnityEngine.Random.Range(0, a)].setSpawn();
-                    return;
-                }
-            }
-            a++;
+            tiles_[0].setSpawn();
+            return;
         }
-
-        //if (a == 0)
-        //{
-        //    tiles_[0].setSpawn();
-        //    return;
-        //}
-
-        //if (tiles_[0].getEnemiesSeen() != tiles_[1].getEnemiesSeen())
-        //{
-        //    tiles_[0].setSpawn();
-        //    return;
-        //}
-
-        //int b = 0;
-        //while (tiles_[b].getClosest() > tiles_[b + 1].getClosest())
-        //{
-        //    b++;
-        //}
-        //if (b == 0)
-        //{
-        //    tiles_[0].setSpawn();
-        //}
-        //else
-        //{
-
-        //}
-
-        //int noOfEnemies = tiles_[0].getEnemiesSeen();
-        //int counter = 0;
-
-        //for (int i = 0; i < 15; i++)
-        //{
-        //    if (tiles_[i].getEnemiesSeen() == noOfEnemies)
-        //    {
-        //        counter++;
-        //    }
-        //    else
-        //    {
-        //        break;
-        //    }
-        //}
-
-        foreach (PossibleSpawns i in tiles_)
+        else
         {
-            Debug.Log("Enemies Seen: " + i.getEnemiesSeen() + " Closest: " + i.getClosest() + " Friendlies Seen: " + i.getFriendliesSeen() + " Closest: " + i.getClosestFriendly());
+            int x = 0;
+            while (tiles_[x].getEnemiesSeen() == tiles_[x + 1].getEnemiesSeen())
+            {
+                if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
+                {
+                    Debug.Log("yeet");
+                    break;
+                }
+                Debug.Log("a");
+                if (tiles_[x].getFriendliesSeen() > tiles_[x + 1].getFriendliesSeen())
+                {
+                    Debug.Log("meet");
+                    break;
+                }
+                Debug.Log("b");
+                if (tiles_[x].getClosestFriendly() < tiles_[x + 1].getClosestFriendly())
+                {
+                    Debug.Log("beat");
+                    break;
+                }
+                Debug.Log("none yet");
+                x++;
+            }
+            tiles_[UnityEngine.Random.Range(0, x)].setSpawn();
+            Debug.Log(x);
+            return;
         }
     }
 
@@ -298,7 +267,7 @@ public class RBSpawningSelector : MonoBehaviour
         if (tiles_ != null)
         {
             //int i = 0;
-            for (int i = 0; i < 15; i++)
+            for (int i = 0; i < numberOfTiles; i++)
             //foreach (PossibleSpawns tile in tiles_)
             {
                 //if (tiles_[i] != null)

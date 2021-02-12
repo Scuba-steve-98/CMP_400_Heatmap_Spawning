@@ -10,20 +10,6 @@ public class PossibleSpawns
     int noOfEnemiesSeen, noOfFriendliesSeen;
     bool isSpawn = false;
 
-    //// Start is called before the first frame update
-    //void Start()
-    //{
-    //    closenessToTarget = 150;
-    //    closestEnemy = 1000;
-    //    noOfEnemiesSeen = 0;
-    //}
-
-    //// Update is called once per frame
-    //void Update()
-    //{
-
-    //}
-
     public void setSpawn()
     {
         isSpawn = true;
