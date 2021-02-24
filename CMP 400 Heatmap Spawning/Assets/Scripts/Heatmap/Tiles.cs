@@ -77,14 +77,4 @@ public class Tiles
     {
         return location;
     }
-
-    public void setCloseness(float close)
-    {
-        closenessToTarget = close;
-    }
-
-    public float getCloseness()
-    {
-        return closenessToTarget;
-    }
 }

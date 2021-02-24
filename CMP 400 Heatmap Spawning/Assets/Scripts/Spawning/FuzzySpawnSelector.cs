@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class FuzzySpawnSelector : MonoBehaviour
 {
-    PossibleSpawns[] tiles_;
-    HeatmapSetup heatmap_;
+    List<PossibleFuzzySpawns> tiles_;
+    FuzzyHeatmapSetup heatmap_;
     GameManager gameManager_;
     Player[] players_;
     Player[] team1_;
@@ -24,9 +24,9 @@ public class FuzzySpawnSelector : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        heatmap_ = FindObjectOfType<HeatmapSetup>();
+        heatmap_ = FindObjectOfType<FuzzyHeatmapSetup>();
         gameManager_ = FindObjectOfType<GameManager>();
-        tiles_ = new PossibleSpawns[numberOfTiles];
+        tiles_ = new List<PossibleFuzzySpawns>();
         defaultVec = new Vector3(1, 0.75f, 1) * 2;
         players_ = FindObjectsOfType<Player>();
         noOfPlayers = players_.Length;
@@ -80,12 +80,12 @@ public class FuzzySpawnSelector : MonoBehaviour
     {
         tiles_ = heatmap_.getFFATiles();
 
-        for (int i = 0; i < numberOfTiles; i++)
+        for (int i = 0; i < tiles_.Count; i++)
         {
             tiles_[i].setSpawn(false);
         }
 
-        for (int i = 0; i < numberOfTiles; i++)
+        for (int i = 0; i < tiles_.Count; i++)
         {
             int enemiesSeen = 0;
             float closest = 10000;
@@ -106,8 +106,8 @@ public class FuzzySpawnSelector : MonoBehaviour
                 }
             }
             Debug.Log(enemiesSeen);
-            tiles_[i].setEnemiesSeen(enemiesSeen);
-            tiles_[i].setClosest(closest);
+            //tiles_[i].setEnemiesSeen(enemiesSeen);
+            //tiles_[i].setClosest(closest);
 
             // change this to have farthest with no enemies seen
             if (enemiesSeen == 0)
@@ -117,9 +117,9 @@ public class FuzzySpawnSelector : MonoBehaviour
             }
         }
 
-        Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getClosest().CompareTo(y.getClosest()); });
-        Array.Reverse(tiles_);
-        Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
+        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getClosest().CompareTo(y.getClosest()); });
+        //Array.Reverse(tiles_);
+        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
 
         if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
         {
@@ -148,7 +148,7 @@ public class FuzzySpawnSelector : MonoBehaviour
 
     public void chooseTDMSpawnLocation(int team)
     {
-        tiles_ = heatmap_.getTDMTiles(team);
+        //tiles_ = heatmap_.getTDMTiles(team);
 
         for (int i = 0; i < numberOfTiles; i++)
         {
@@ -202,10 +202,10 @@ public class FuzzySpawnSelector : MonoBehaviour
                     }
                 }
             }
-            tiles_[i].setEnemiesSeen(enemiesSeen);
-            tiles_[i].setClosest(closest);
-            tiles_[i].setFriendliesSeen(friendliesSeen);
-            tiles_[i].setClosestFriendly(closestFriendly);
+            //tiles_[i].setEnemiesSeen(enemiesSeen);
+            //tiles_[i].setClosest(closest);
+            //tiles_[i].setFriendliesSeen(friendliesSeen);
+            //tiles_[i].setClosestFriendly(closestFriendly);
 
             // change this to have farthest with no enemies seen
             if (enemiesSeen == 0)
@@ -215,14 +215,14 @@ public class FuzzySpawnSelector : MonoBehaviour
                 return;
             }
         }
-        Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getClosestFriendly().CompareTo(y.getClosestFriendly()); });
-        Array.Reverse(tiles_);
-        Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getFriendliesSeen().CompareTo(y.getFriendliesSeen()); });
-        Array.Reverse(tiles_);
+        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getClosestFriendly().CompareTo(y.getClosestFriendly()); });
+        //Array.Reverse(tiles_);
+        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getFriendliesSeen().CompareTo(y.getFriendliesSeen()); });
+        //Array.Reverse(tiles_);
 
-        Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getClosest().CompareTo(y.getClosest()); });
-        Array.Reverse(tiles_);
-        Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
+        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getClosest().CompareTo(y.getClosest()); });
+        //Array.Reverse(tiles_);
+        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
 
         if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
         {
@@ -266,25 +266,19 @@ public class FuzzySpawnSelector : MonoBehaviour
         // draws the heatmap (only going to be used for demos)
         if (tiles_ != null)
         {
-            //int i = 0;
-            for (int i = 0; i < numberOfTiles; i++)
-            //foreach (PossibleSpawns tile in tiles_)
+            for (int i = 0; i < tiles_.Count; i++)
             {
-                //if (tiles_[i] != null)
+                // sets cube colour based on its threat value
+                if (tiles_[i].getSpawn())
                 {
-                    // sets cube colour based on its threat value
-                    if (tiles_[i].getSpawn())
-                    {
-                        Gizmos.color = Color.magenta;
-                    }
-                    else
-                    {
-                        Gizmos.color = Color.green;
-                    }
-
-
-                    Gizmos.DrawCube(tiles_[i].getLocation(), defaultVec);
+                    Gizmos.color = Color.magenta;
                 }
+                else
+                {
+                    Gizmos.color = Color.green;
+                }
+
+                Gizmos.DrawCube(tiles_[i].getLocation(), defaultVec);
             }
         }
     }

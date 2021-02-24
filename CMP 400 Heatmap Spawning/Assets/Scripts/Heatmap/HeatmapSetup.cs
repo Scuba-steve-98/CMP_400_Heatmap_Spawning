@@ -26,6 +26,8 @@ public class HeatmapSetup : MonoBehaviour
     [SerializeField, Range(0, 75)]
     float targetThreatValue = 32;
 
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -228,19 +230,6 @@ public class HeatmapSetup : MonoBehaviour
                     rbss.chooseFFASpawnLocation();
                 }
             }
-            else if (gameManager_.getSpawnType() == SPAWN_TYPE.FUZZY)
-            {
-                if (gameManager_.isTDM())
-                {
-                    FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
-                    flss.chooseTDMSpawnLocation(team);
-                }
-                else
-                {
-                    FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
-                    flss.chooseFFASpawnLocation();
-                }
-            }
             else if (gameManager_.getSpawnType() == SPAWN_TYPE.COD)
             {
                 if (gameManager_.isTDM())
@@ -295,13 +284,13 @@ public class HeatmapSetup : MonoBehaviour
                     if (gameManager_.isTDM())
                     {
                         // sets cube colour based on its threat value
-                        Gizmos.color = Color.Lerp(Color.blue, Color.red, (tile.getTeamThreatLevel(team) / 100f));
+                        Gizmos.color = Color.Lerp(Color.blue, Color.red, (tile.getTeamThreatLevel(team) / 150f));
                         Gizmos.DrawCube(tile.getLocation(), defaultVec);
                     }
                     else
                     {
                         // sets cube colour based on its threat value
-                        Gizmos.color = Color.Lerp(Color.blue, Color.red, (tile.getThreatLevel() / 100f));
+                        Gizmos.color = Color.Lerp(Color.blue, Color.red, (tile.getThreatLevel() / 150f));
                         Gizmos.DrawCube(tile.getLocation(), defaultVec);
                     }
                 }

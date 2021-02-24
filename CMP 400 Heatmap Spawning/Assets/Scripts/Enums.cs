@@ -11,3 +11,51 @@ public enum GAMETYPE
     FFA,
     TDM
 }
+
+public enum FUZZY_OUTPUT
+{
+    FULL,
+    VERY_HIGH,
+    PRETTY_HIGH,
+    NEUTRAL,
+    PRETTY_LOW,
+    REALLY_LOW,
+    EMPTY
+}
+
+
+public enum DANGER
+{
+    CERTAIN_DEATH,
+    SERIOUSLY_DANGEROUS,
+    VERY_DANGEROUS,
+    PRETTY_DANGEROUS,
+    A_LITTLE_DANGEROUS,
+    NEUTRAL,
+    A_LITTLE_LOW,
+    PRETTY_LOW,
+    REALLY_LOW,
+    SERIOUSLY_LOW,
+    SAFE
+}
+
+
+public enum CLOSENESS
+{
+    POINT_BLANK,
+    REALLY_CLOSE,
+    PRETTY_CLOSE,
+    SOCIALLY_DISTANCED,
+    PRETTY_FAR,
+    REALLY_FAR,
+    HE_GONE
+}
+
+
+public enum ENEMIES_SEEN
+{
+    ALONE,
+    A_COUPLE,
+    A_FEW,
+    BREAKING_COVID_LAWS
+}
