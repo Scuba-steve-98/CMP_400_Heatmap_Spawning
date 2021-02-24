@@ -110,6 +110,9 @@ public class FuzzyHeatmapSetup : MonoBehaviour
     AnimationCurve aFew;
 
     [SerializeField]
+    AnimationCurve crouded;
+
+    [SerializeField]
     AnimationCurve breakingRonaLaws;
 
     // Start is called before the first frame update
@@ -141,14 +144,6 @@ public class FuzzyHeatmapSetup : MonoBehaviour
         possibleFFA = new List<PossibleFuzzySpawns>();
         possibleTeam1 = new List<PossibleFuzzySpawns>();
         possibleTeam2 = new List<PossibleFuzzySpawns>();
-
-        //// creates the individual tiles variables
-        //for (int i = 0; i < numberOfTiles; i++)
-        //{
-        //    possibleFFASpawnAreas[i] = new PossibleFuzzySpawns();
-        //    possibleP1SpawnAreas[i] = new PossibleFuzzySpawns();
-        //    possibleP2SpawnAreas[i] = new PossibleFuzzySpawns();
-        //}
 
         // call function to activate tiles
         setHeatmapUp();
@@ -207,6 +202,14 @@ public class FuzzyHeatmapSetup : MonoBehaviour
 
     // Update is called once per frame
     void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            getHeatmapData();
+        }
+    }
+
+    void getHeatmapData()
     {
         // resets tiles closeness
         resetList();
@@ -299,13 +302,13 @@ public class FuzzyHeatmapSetup : MonoBehaviour
                 }
             }
 
-            if (gameManager_.isTDM() && Input.GetKeyDown(KeyCode.Space))
+            if (gameManager_.isTDM())
             {
                 team1Level = getFuzzyDangerLevel(team1Threat / 150);
                 team2Level = getFuzzyDangerLevel(team2Threat / 150);
                 friendly1Level = getFuzzyDangerLevel(team1Friendly / 90);
                 friendly2Level = getFuzzyDangerLevel(team2Friendly / 90);
-                Debug.Log(team1Level + " " + targetLevel);
+                //Debug.Log(team1Level + " " + targetLevel);
 
                 tiles[i].setValues(team1Level, team2Level, friendly1Level, friendly2Level);
                 int close = Mathf.Abs((int)team1Level - (int)targetLevel);
@@ -320,7 +323,7 @@ public class FuzzyHeatmapSetup : MonoBehaviour
                     possibleTeam2.Add(new PossibleFuzzySpawns(tiles[i].getLocation()));
                 }
             }
-            else if (!gameManager_.isTDM() && Input.GetKeyDown(KeyCode.Space))
+            else if (!gameManager_.isTDM())
             {
                 // stores the threat level for the tile after it has been calculated
                 dangerLevel = getFuzzyDangerLevel(threatLevel / 200);
@@ -332,31 +335,28 @@ public class FuzzyHeatmapSetup : MonoBehaviour
                 }
             }
         }
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (gameManager_.getSpawnType() == SPAWN_TYPE.FUZZY)
         {
-            if (gameManager_.getSpawnType() == SPAWN_TYPE.FUZZY)
+            if (gameManager_.isTDM())
             {
-                if (gameManager_.isTDM())
-                {
-                    Debug.Log("No. of spawns in list" + possibleTeam1.Count + " " + possibleTeam2.Count);
+                Debug.Log("No. of spawns in list" + possibleTeam1.Count + " " + possibleTeam2.Count);
 
-                    //for (int i = 0; i < possibleTeam1.Count; i++)
-                    //{
-                    //    Debug.Log("Possible Team 1 Spawn Location " + i + ": " + possibleTeam1[i].getLocation());
-                    //}
-                    //for (int i = 0; i < possibleTeam2.Count; i++)
-                    //{
-                    //    Debug.Log("Possible Team 2 Spawn Location " + i + ": " + possibleTeam2[i].getLocation());
-                    //}
+                //for (int i = 0; i < possibleTeam1.Count; i++)
+                //{
+                //    Debug.Log("Possible Team 1 Spawn Location " + i + ": " + possibleTeam1[i].getLocation());
+                //}
+                //for (int i = 0; i < possibleTeam2.Count; i++)
+                //{
+                //    Debug.Log("Possible Team 2 Spawn Location " + i + ": " + possibleTeam2[i].getLocation());
+                //}
 
-                    FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
-                    flss.chooseTDMSpawnLocation(team);
-                }
-                else
-                {
-                    FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
-                    flss.chooseFFASpawnLocation();
-                }
+                FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
+                flss.chooseTDMSpawnLocation(team);
+            }
+            else
+            {
+                FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
+                flss.chooseFFASpawnLocation();
             }
         }
     }
@@ -448,24 +448,36 @@ public class FuzzyHeatmapSetup : MonoBehaviour
         }
     }
 
-    public ENEMIES_SEEN getFuzzyEnemiesSeen(float x)
+    public ENEMIES_SEEN getFuzzyEnemiesSeen(int x)
     {
-        if (alone.Evaluate(x) < aCouple.Evaluate(x))
+        if (x == 0)
         {
             return (ENEMIES_SEEN)0;
         }
-        else if (aCouple.Evaluate(x) < aFew.Evaluate(x))
+        else if (x < 3)
         {
             return (ENEMIES_SEEN)1;
         }
-        else if (aFew.Evaluate(x) < breakingRonaLaws.Evaluate(x))
+        else if (x < 5)
         {
             return (ENEMIES_SEEN)2;
         }
-        else
+        else if (x < 7)
         {
             return (ENEMIES_SEEN)3;
         }
+        else
+        {
+            return (ENEMIES_SEEN)4;
+        }
+    }
+
+    public float getWidth()
+    {
+        if (width < bredth)
+            return width * scale;
+        else
+            return bredth * scale;
     }
 
     public void setTargetDangerLevel(float x)
@@ -503,7 +515,7 @@ public class FuzzyHeatmapSetup : MonoBehaviour
                     {
                         // sets cube colour based on its threat value
                         //Gizmos.color = Color.Lerp(Color.blue, Color.red, (tile.getTeamThreatLevel(team) / 100f));
-                        
+
                         Gizmos.DrawCube(tile.getLocation(), defaultVec);
                     }
                     else
@@ -515,16 +527,16 @@ public class FuzzyHeatmapSetup : MonoBehaviour
                 }
                 i++;
             }
-            foreach (PossibleFuzzySpawns pfs in possibleTeam1)
-            {
-                Gizmos.color = Color.green;
-                Gizmos.DrawCube(pfs.getLocation(), defaultVec);
-            }
-            foreach (PossibleFuzzySpawns pfs in possibleTeam2)
-            {
-                Gizmos.color = Color.blue;
-                Gizmos.DrawCube(pfs.getLocation(), defaultVec);
-            }
+            //foreach (PossibleFuzzySpawns pfs in possibleTeam1)
+            //{
+            //    Gizmos.color = Color.green;
+            //    Gizmos.DrawCube(pfs.getLocation(), defaultVec);
+            //}
+            //foreach (PossibleFuzzySpawns pfs in possibleTeam2)
+            //{
+            //    Gizmos.color = Color.blue;
+            //    Gizmos.DrawCube(pfs.getLocation(), defaultVec);
+            //}
         }
     }
 }

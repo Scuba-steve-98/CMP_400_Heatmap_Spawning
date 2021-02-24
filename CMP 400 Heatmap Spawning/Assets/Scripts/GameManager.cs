@@ -50,7 +50,7 @@ public class GameManager : MonoBehaviour
             playersInTeam2++;
         }
 
-        Debug.Log(noOfPlayers + " " + playersInTeam);
+        //Debug.Log(noOfPlayers + " " + playersInTeam);
         ranking = new int[noOfPlayers];
         playersScore = new int[noOfPlayers];
 
@@ -72,6 +72,24 @@ public class GameManager : MonoBehaviour
                 teamDeaths = new int[2];
                 break;
 
+            default:
+                break;
+        }
+
+        switch (spawnType)
+        {
+            case SPAWN_TYPE.RULE_BASED:
+                RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
+                rbss.init();
+                break;
+
+            case SPAWN_TYPE.FUZZY:
+                FuzzySpawnSelector fss = FindObjectOfType<FuzzySpawnSelector>();
+                fss.init();
+                break;
+
+            case SPAWN_TYPE.COD:
+                break;
             default:
                 break;
         }

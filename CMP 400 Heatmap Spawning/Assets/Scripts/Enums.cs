@@ -57,5 +57,6 @@ public enum ENEMIES_SEEN
     ALONE,
     A_COUPLE,
     A_FEW,
+    CROUDED,
     BREAKING_COVID_LAWS
 }

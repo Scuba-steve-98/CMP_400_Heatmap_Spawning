@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
     RBSpawningSelector rbSpawningSelector;
     FuzzySpawnSelector fuzzySpawnSelector;
     CODSpawnSelector codSpawnSelector;
+    Renderer rend;
 
     [SerializeField, Range(0, 10)]
     float overallKD = 1;
@@ -33,6 +34,7 @@ public class Player : MonoBehaviour
         gameManager_ = FindObjectOfType<GameManager>().GetComponent<GameManager>();
         threatLevel = baseThreat;
         friendlyLevel = baseThreat / 2;
+        rend = GetComponent<Renderer>();
 
         health = 100;
     }
@@ -85,6 +87,14 @@ public class Player : MonoBehaviour
     {
         team = teamNo;
         Debug.Log(team);
+        if (team == 0)
+        {
+            rend.material.color = Color.green;
+        }
+        else
+        {
+            rend.material.color = Color.blue;
+        }
     }
     
 

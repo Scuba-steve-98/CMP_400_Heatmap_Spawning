@@ -31,6 +31,13 @@ public class RBSpawningSelector : MonoBehaviour
         players_ = FindObjectsOfType<Player>();
         noOfPlayers = players_.Length;
 
+        layerMask |= 1 << 9;
+        layerMask |= 1 << 10;
+        layerMask = ~layerMask;
+    }
+
+    public void init()
+    {
         if (gameManager_.isTDM())
         {
             if (noOfPlayers % 2 == 0)
@@ -63,11 +70,6 @@ public class RBSpawningSelector : MonoBehaviour
             enemy_ = team2_;
             friendly_ = team1_;
         }
-
-
-        layerMask |= 1 << 9;
-        layerMask |= 1 << 10;
-        layerMask = ~layerMask;
     }
 
     private void Update()
