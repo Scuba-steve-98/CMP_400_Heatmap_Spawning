@@ -210,12 +210,12 @@ public class RBSpawningSelector : MonoBehaviour
             tiles_[i].setClosestFriendly(closestFriendly);
 
             // change this to have farthest with no enemies seen
-            if (enemiesSeen == 0)
-            {
-                tiles_[i].setSpawn();
-                Debug.Log("Found");
-                return;
-            }
+            //if (enemiesSeen == 0)
+            //{
+            //    tiles_[i].setSpawn();
+            //    Debug.Log("Found");
+            //    return;
+            //}
         }
         Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getClosestFriendly().CompareTo(y.getClosestFriendly()); });
         Array.Reverse(tiles_);

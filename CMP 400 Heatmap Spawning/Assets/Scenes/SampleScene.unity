@@ -648,7 +648,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spawnType: 0
-  gameType: 1
+  gameType: 2
   scoreLimit: 35
   gameTime: 10
 --- !u!114 &894425548

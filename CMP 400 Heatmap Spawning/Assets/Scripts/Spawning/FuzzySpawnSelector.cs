@@ -6,7 +6,7 @@ using UnityEngine;
 public class FuzzySpawnSelector : MonoBehaviour
 {
     List<PossibleFuzzySpawns> tiles_;
-    FuzzyHeatmapSetup heatmap_;
+    FuzzyHeatmapData heatmap_;
     GameManager gameManager_;
     Player[] players_;
     Player[] team1_;
@@ -31,14 +31,10 @@ public class FuzzySpawnSelector : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        heatmap_ = FindObjectOfType<FuzzyHeatmapSetup>();
+        heatmap_ = FindObjectOfType<FuzzyHeatmapData>();
         gameManager_ = FindObjectOfType<GameManager>();
         tiles_ = new List<PossibleFuzzySpawns>();
         defaultVec = new Vector3(1, 0.75f, 1) * 2;
-        players_ = FindObjectsOfType<Player>();
-        noOfPlayers = players_.Length;
-        mapWidth = heatmap_.getWidth();
-        Debug.Log("Map Width: " + mapWidth);
 
         layerMask |= 1 << 9;
         layerMask |= 1 << 10;
@@ -85,6 +81,10 @@ public class FuzzySpawnSelector : MonoBehaviour
             enemy_ = team2_;
             friendly_ = team1_;
         }
+        players_ = FindObjectsOfType<Player>();
+        noOfPlayers = players_.Length;
+        mapWidth = heatmap_.getWidth();
+        Debug.Log("Map Width: " + mapWidth);
     }
 
     private void Update()
@@ -104,9 +104,8 @@ public class FuzzySpawnSelector : MonoBehaviour
 
         for (int i = 0; i < tiles_.Count; i++)
         {
-            int enemiesSeen = 0;
+            int enemies = 0;
             float closest = 10000;
-
             foreach (Player enemy in players_)
             {
                 Ray ray = new Ray(tiles_[i].getLocation(), (enemy.transform.position - tiles_[i].getLocation()));
@@ -114,7 +113,7 @@ public class FuzzySpawnSelector : MonoBehaviour
                 Physics.Raycast(ray, out hit, 100, layerMask);
                 if (hit.collider.gameObject == enemy.gameObject)
                 {
-                    enemiesSeen++;
+                    enemies++;
                     float dist = Vector3.Distance(tiles_[i].getLocation(), enemy.transform.position);
                     if (dist < closest)
                     {
@@ -122,44 +121,56 @@ public class FuzzySpawnSelector : MonoBehaviour
                     }
                 }
             }
-            Debug.Log(enemiesSeen);
-            //tiles_[i].setEnemiesSeen(enemiesSeen);
-            //tiles_[i].setClosest(closest);
+            enemiesSeen = heatmap_.getFuzzyEnemiesSeen(enemies);
+            closenessToEnemy = heatmap_.getFuzzyCloseness(closest / mapWidth);
 
             // change this to have farthest with no enemies seen
-            if (enemiesSeen == 0)
-            {
-                tiles_[i].setSpawn();
-                return;
-            }
+            //if (enemiesSeen == 0)
+            //{
+            //    tiles_[i].setSpawn();
+            //    return;
+            //}
         }
 
-        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getClosest().CompareTo(y.getClosest()); });
-        //Array.Reverse(tiles_);
-        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
+        tiles_.Sort(delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getClosest().CompareTo(y.getClosest()); });
+        tiles_.Reverse();
+        tiles_.Sort(delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
 
-        //if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
-        //{
-        //    tiles_[0].setSpawn();
-        //    return;
-        //}
-        //else
-        //{
-        //    int x = 0;
-        //    while (tiles_[x].getEnemiesSeen() == tiles_[x + 1].getEnemiesSeen())
-        //    {
-        //        if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
-        //        {
-        //            Debug.Log("yeet");
-        //            break;
-        //        }
-        //        Debug.Log("none yet");
-        //        x++;
-        //    }
-        //    tiles_[UnityEngine.Random.Range(0, x)].setSpawn();
-        //    Debug.Log(x);
-        //    return;
-        //}
+        if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
+        {
+            tiles_[0].setSpawn();
+            Debug.Log("OOF" + tiles_[0].getEnemiesSeen() + " " + tiles_[1].getEnemiesSeen());
+            return;
+        }
+        else
+        {
+            Debug.Log(tiles_.Count);
+            int x = 0;
+            for (int i = 0; i < tiles_.Count; i++)
+            {
+                if ((i + 1) < tiles_.Count)
+                {
+                    if (tiles_[i].getEnemiesSeen() == tiles_[i + 1].getEnemiesSeen())
+                    {
+                        if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
+                        {
+                            tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
+                        return;
+                    }
+                }
+                else
+                {
+                    tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
+                    return;
+                }
+            }
+        }
     }
 
 
@@ -246,49 +257,6 @@ public class FuzzySpawnSelector : MonoBehaviour
         {
             Debug.Log("Enemies Seen: " + pfs.getEnemiesSeen() + " Enemy Closeness: " + pfs.getClosest());
         }
-
-        if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
-        {
-            tiles_[0].setSpawn();
-            return;
-        }
-        else
-        {
-            int x = 0;
-            while (tiles_[x].getEnemiesSeen() == tiles_[x + 1].getEnemiesSeen())
-            {
-                if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
-                {
-                    Debug.Log("yeet");
-                    break;
-                }
-                Debug.Log("a");
-                if (tiles_[x].getFriendliesSeen() > tiles_[x + 1].getFriendliesSeen())
-                {
-                    Debug.Log("meet");
-                    break;
-                }
-                Debug.Log("b");
-                if (tiles_[x].getClosestFriendly() < tiles_[x + 1].getClosestFriendly())
-                {
-                    Debug.Log("beat");
-                    break;
-                }
-                Debug.Log("none yet");
-                x++;
-            }
-            tiles_[UnityEngine.Random.Range(0, x)].setSpawn();
-            Debug.Log(x);
-            return;
-        }
-        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getClosestFriendly().CompareTo(y.getClosestFriendly()); });
-        //Array.Reverse(tiles_);
-        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getFriendliesSeen().CompareTo(y.getFriendliesSeen()); });
-        //Array.Reverse(tiles_);
-
-        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getClosest().CompareTo(y.getClosest()); });
-        //Array.Reverse(tiles_);
-        //Array.Sort<PossibleFuzzySpawns>(tiles_, delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
 
         if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
         {
