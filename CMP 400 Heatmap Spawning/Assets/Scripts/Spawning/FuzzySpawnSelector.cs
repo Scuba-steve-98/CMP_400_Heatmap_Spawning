@@ -32,7 +32,6 @@ public class FuzzySpawnSelector : MonoBehaviour
     void Start()
     {
         heatmap_ = FindObjectOfType<FuzzyHeatmapData>();
-        gameManager_ = FindObjectOfType<GameManager>();
         tiles_ = new List<PossibleFuzzySpawns>();
         defaultVec = new Vector3(1, 0.75f, 1) * 2;
 
@@ -43,6 +42,7 @@ public class FuzzySpawnSelector : MonoBehaviour
 
     public void init()
     {
+        gameManager_ = FindObjectOfType<GameManager>();
         if (gameManager_.isTDM())
         {
             int team1Counter = 0;

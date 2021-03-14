@@ -138,17 +138,14 @@ public class FuzzyHeatmapData : MonoBehaviour
     }
 
 
-    public void addTiles(FuzzyTiles[] ft)
+    public void addTiles(List<FuzzyTiles> ft)
     {
         if (tilesList == null)
         {
             tilesList = new List<FuzzyTiles>();
         }
-        
-        foreach (FuzzyTiles x in ft)
-        {
-            tilesList.Add(x);
-        }
+
+        tilesList.AddRange(ft);
     }
 
     void getHeatmapData()

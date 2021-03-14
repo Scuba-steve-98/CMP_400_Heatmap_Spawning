@@ -12,17 +12,13 @@ public class Tiles
     {
         threatLevel = threat;
         location = pos;
-        // add no. enemies and distance later
     }
 
 
     public Tiles(Vector3 pos)
     {
         location = pos;
-        // add no. enemies and distance later
     }
-
-
     public void setValues(float threat)
     {
         threatLevel = threat;

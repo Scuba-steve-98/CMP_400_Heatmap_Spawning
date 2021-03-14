@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class RBSpawningSelector : MonoBehaviour
 {
-    PossibleSpawns[] tiles_;
-    HeatmapSetup heatmap_;
+    //PossibleSpawns[] tiles_;
+    HeatmapData heatmap_;
     GameManager gameManager_;
     Player[] players_;
     Player[] team1_;
@@ -16,20 +16,17 @@ public class RBSpawningSelector : MonoBehaviour
 
     Vector3 defaultVec;
 
-    int noOfPlayers;
-    int numberOfTiles = 15;
+    PossibleSpawns[] demo;
+
+    int numberOfTiles = 45;
 
     int layerMask = 0;
 
     // Start is called before the first frame update
     void Start()
     {
-        heatmap_ = FindObjectOfType<HeatmapSetup>();
-        gameManager_ = FindObjectOfType<GameManager>();
-        tiles_ = new PossibleSpawns[numberOfTiles];
+        heatmap_ = FindObjectOfType<HeatmapData>();
         defaultVec = new Vector3(1, 0.75f, 1) * 2;
-        players_ = FindObjectsOfType<Player>();
-        noOfPlayers = players_.Length;
 
         layerMask |= 1 << 9;
         layerMask |= 1 << 10;
@@ -38,31 +35,39 @@ public class RBSpawningSelector : MonoBehaviour
 
     public void init()
     {
+        players_ = FindObjectsOfType<Player>();
+        gameManager_ = FindObjectOfType<GameManager>();
         if (gameManager_.isTDM())
         {
-            if (noOfPlayers % 2 == 0)
-            {
-                team1_ = new Player[noOfPlayers / 2];
-                team2_ = new Player[noOfPlayers / 2];
-            }
-            else
-            {
-                team1_ = new Player[noOfPlayers / 2];
-                team2_ = new Player[noOfPlayers / 2 + 1];
-            }
-
-            int team1counter = 0;
+            int team1Counter = 0;
             int team2counter = 0;
-            for (int i = 0; i < noOfPlayers; i++)
+            foreach (Player p in players_)
             {
-                if (players_[i].getTeam() == 0)
+                if (p.getTeam() == 0)
                 {
-                    team1_[team1counter] = players_[i];
-                    team1counter++;
+                    team1Counter++;
                 }
                 else
                 {
-                    team2_[team2counter] = players_[i];
+                    team2counter++;
+                }
+            }
+
+            team1_ = new Player[team1Counter];
+            team2_ = new Player[team2counter];
+            team1Counter = 0;
+            team2counter = 0;
+
+            foreach (Player p in players_)
+            {
+                if (p.getTeam() == 0)
+                {
+                    team1_[team1Counter] = p;
+                    team1Counter++;
+                }
+                else
+                {
+                    team2_[team2counter] = p;
                     team2counter++;
                 }
             }
@@ -78,10 +83,8 @@ public class RBSpawningSelector : MonoBehaviour
     }
 
 
-    public void chooseFFASpawnLocation()
+    public void chooseFFASpawnLocation(PossibleSpawns[] tiles_)
     {
-        tiles_ = heatmap_.getFFATiles();
-
         for (int i = 0; i < numberOfTiles; i++)
         {
             tiles_[i].setSpawn(false);
@@ -148,10 +151,8 @@ public class RBSpawningSelector : MonoBehaviour
     }
 
 
-    public void chooseTDMSpawnLocation(int team)
+    public void chooseTDMSpawnLocation(int team, PossibleSpawns[] tiles_)
     {
-        tiles_ = heatmap_.getTDMTiles(team);
-
         for (int i = 0; i < numberOfTiles; i++)
         {
             tiles_[i].setSpawn(false);
@@ -174,6 +175,7 @@ public class RBSpawningSelector : MonoBehaviour
             int friendliesSeen = 0;
             float closest = 10000;
             float closestFriendly = 10000;
+
             foreach (Player enemy in enemy_)
             {
                 Ray ray = new Ray(tiles_[i].getLocation(), (enemy.transform.position - tiles_[i].getLocation()));
@@ -208,14 +210,6 @@ public class RBSpawningSelector : MonoBehaviour
             tiles_[i].setClosest(closest);
             tiles_[i].setFriendliesSeen(friendliesSeen);
             tiles_[i].setClosestFriendly(closestFriendly);
-
-            // change this to have farthest with no enemies seen
-            //if (enemiesSeen == 0)
-            //{
-            //    tiles_[i].setSpawn();
-            //    Debug.Log("Found");
-            //    return;
-            //}
         }
         Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getClosestFriendly().CompareTo(y.getClosestFriendly()); });
         Array.Reverse(tiles_);
@@ -226,6 +220,11 @@ public class RBSpawningSelector : MonoBehaviour
         Array.Reverse(tiles_);
         Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
 
+        for (int i = 0; i < tiles_.Length; i++)
+        {
+            Debug.Log("Close: " + tiles_[i].getClosest() + "   Enemies: " + tiles_[i].getEnemiesSeen());
+        }
+
         if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
         {
             tiles_[0].setSpawn();
@@ -233,31 +232,37 @@ public class RBSpawningSelector : MonoBehaviour
         }
         else
         {
-            int x = 0;
-            while (tiles_[x].getEnemiesSeen() == tiles_[x + 1].getEnemiesSeen())
+            for (int i = 0; i < tiles_.Length; i++)
             {
-                if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
+                if ((i+1) < tiles_.Length)
                 {
-                    Debug.Log("yeet");
-                    break;
+                    if (tiles_[i].getClosest() > tiles_[i + 1].getClosest())
+                    {
+                        Debug.Log("yeet");
+                        tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
+                        break;
+                    }
+                    if (tiles_[i].getFriendliesSeen() > tiles_[i + 1].getFriendliesSeen())
+                    {
+                        Debug.Log("meet");
+                        tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
+                        break;
+                    }
+                    if (tiles_[i].getClosestFriendly() < tiles_[i + 1].getClosestFriendly())
+                    {
+                        Debug.Log("beat");
+                        tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
+                        break;
+                    }
                 }
-                Debug.Log("a");
-                if (tiles_[x].getFriendliesSeen() > tiles_[x + 1].getFriendliesSeen())
+                else
                 {
-                    Debug.Log("meet");
-                    break;
+                    Debug.Log("NONE");
+                    tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
                 }
-                Debug.Log("b");
-                if (tiles_[x].getClosestFriendly() < tiles_[x + 1].getClosestFriendly())
-                {
-                    Debug.Log("beat");
-                    break;
-                }
-                Debug.Log("none yet");
-                x++;
             }
-            tiles_[UnityEngine.Random.Range(0, x)].setSpawn();
-            Debug.Log(x);
+            // just for demonstating that it works and where it has chosen
+            demo = tiles_;
             return;
         }
     }
@@ -266,27 +271,20 @@ public class RBSpawningSelector : MonoBehaviour
     private void OnDrawGizmos()
     {
         // draws the heatmap (only going to be used for demos)
-        if (tiles_ != null)
+        if (demo != null)
         {
-            //int i = 0;
-            for (int i = 0; i < numberOfTiles; i++)
-            //foreach (PossibleSpawns tile in tiles_)
+            for (int i = 0; i < demo.Length; i++)
             {
-                //if (tiles_[i] != null)
+                // sets cube colour based on its threat value
+                if (demo[i].getSpawn())
                 {
-                    // sets cube colour based on its threat value
-                    if (tiles_[i].getSpawn())
-                    {
-                        Gizmos.color = Color.magenta;
-                    }
-                    else
-                    {
-                        Gizmos.color = Color.green;
-                    }
-
-
-                    Gizmos.DrawCube(tiles_[i].getLocation(), defaultVec);
+                    Gizmos.color = Color.magenta;
                 }
+                else
+                {
+                    Gizmos.color = Color.green;
+                }
+                Gizmos.DrawCube(demo[i].getLocation() + Vector3.up * 0.5f, defaultVec);
             }
         }
     }

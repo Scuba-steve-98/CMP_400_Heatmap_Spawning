@@ -27,6 +27,8 @@ public class GameManager : MonoBehaviour
     int[] ranking;
     int[] playersScore;
 
+    bool trigger = false;
+
     float gameProgress, team1KD, team2KD, timer, team1Threat, team2Threat;
     
     Player[] players;
@@ -55,49 +57,92 @@ public class GameManager : MonoBehaviour
         playersScore = new int[noOfPlayers];
 
 
-        switch (gameType)
-        {
-            case GAMETYPE.TEST:
-                break;
+        //switch (gameType)
+        //{
+        //    case GAMETYPE.TEST:
+        //        break;
 
-            case GAMETYPE.FFA:
-                FFAInit();
-                teamScore = new int[noOfPlayers];
-                teamDeaths = new int[noOfPlayers];
-                break;
+        //    case GAMETYPE.FFA:
+        //        FFAInit();
+        //        teamScore = new int[noOfPlayers];
+        //        teamDeaths = new int[noOfPlayers];
+        //        break;
 
-            case GAMETYPE.TDM:
-                TDMInit();
-                teamScore = new int[2];
-                teamDeaths = new int[2];
-                break;
+        //    case GAMETYPE.TDM:
+        //        TDMInit();
+        //        teamScore = new int[2];
+        //        teamDeaths = new int[2];
+        //        break;
 
-            default:
-                break;
-        }
+        //    default:
+        //        break;
+        //}
 
-        switch (spawnType)
-        {
-            case SPAWN_TYPE.RULE_BASED:
-                RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
-                rbss.init();
-                break;
+        //switch (spawnType)
+        //{
+        //    case SPAWN_TYPE.RULE_BASED:
+        //        RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
+        //        rbss.init();
+        //        break;
 
-            case SPAWN_TYPE.FUZZY:
-                FuzzySpawnSelector fss = FindObjectOfType<FuzzySpawnSelector>();
-                fss.init();
-                break;
+        //    case SPAWN_TYPE.FUZZY:
+        //        FuzzySpawnSelector fss = FindObjectOfType<FuzzySpawnSelector>();
+        //        fss.init();
+        //        break;
 
-            case SPAWN_TYPE.COD:
-                break;
-            default:
-                break;
-        }
+        //    case SPAWN_TYPE.COD:
+        //        break;
+        //    default:
+        //        break;
+        //}
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!trigger)
+        {
+            trigger = true;
+            switch (gameType)
+            {
+                case GAMETYPE.TEST:
+                    break;
+
+                case GAMETYPE.FFA:
+                    FFAInit();
+                    teamScore = new int[noOfPlayers];
+                    teamDeaths = new int[noOfPlayers];
+                    break;
+
+                case GAMETYPE.TDM:
+                    TDMInit();
+                    teamScore = new int[2];
+                    teamDeaths = new int[2];
+                    break;
+
+                default:
+                    break;
+            }
+
+            switch (spawnType)
+            {
+                case SPAWN_TYPE.RULE_BASED:
+                    RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
+                    rbss.init();
+                    break;
+
+                case SPAWN_TYPE.FUZZY:
+                    FuzzySpawnSelector fss = FindObjectOfType<FuzzySpawnSelector>();
+                    fss.init();
+                    break;
+
+                case SPAWN_TYPE.COD:
+                    break;
+                default:
+                    break;
+            }
+        }
+
         timer += Time.deltaTime;
 
         if (timer >= gameTime)
