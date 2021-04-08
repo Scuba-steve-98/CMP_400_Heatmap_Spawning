@@ -2,7 +2,8 @@
 {
     RULE_BASED,
     FUZZY,
-    COD
+    COD,
+    HALO
 }
 
 public enum GAMETYPE

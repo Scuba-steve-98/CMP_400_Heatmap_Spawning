@@ -247,7 +247,6 @@ public class FuzzyHeatmapData : MonoBehaviour
                 team2Level = getFuzzyDangerLevel(team2Threat / 150);
                 friendly1Level = getFuzzyDangerLevel(team1Friendly / 90);
                 friendly2Level = getFuzzyDangerLevel(team2Friendly / 90);
-                //Debug.Log(team1Level + " " + targetLevel);
 
                 tilesList[i].setValues(team1Level, team2Level, friendly1Level, friendly2Level);
                 int close = Mathf.Abs((int)team1Level - (int)targetLevel);
@@ -278,24 +277,20 @@ public class FuzzyHeatmapData : MonoBehaviour
         {
             if (gameManager_.isTDM())
             {
-                //Debug.Log("No. of spawns in list" + possibleTeam1.Count + " " + possibleTeam2.Count);
-
-                //for (int i = 0; i < possibleTeam1.Count; i++)
-                //{
-                //    Debug.Log("Possible Team 1 Spawn Location " + i + ": " + possibleTeam1[i].getLocation());
-                //}
-                //for (int i = 0; i < possibleTeam2.Count; i++)
-                //{
-                //    Debug.Log("Possible Team 2 Spawn Location " + i + ": " + possibleTeam2[i].getLocation());
-                //}
-
                 FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
-                flss.chooseTDMSpawnLocation(team);
+                if (team == 0)
+                {
+                    flss.chooseTDMSpawnLocation(team, possibleTeam1);
+                }
+                else
+                {
+                    flss.chooseTDMSpawnLocation(team, possibleTeam2);
+                }
             }
             else
             {
                 FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
-                flss.chooseFFASpawnLocation();
+                flss.chooseFFASpawnLocation(possibleFFA);
             }
         }
     }
@@ -441,41 +436,26 @@ public class FuzzyHeatmapData : MonoBehaviour
         }
     }
 
-    //private void OnDrawGizmos()
-    //{
-    //    // draws the heatmap (only going to be used for demos)
-    //    if (tilesList != null)
-    //    {
-    //        int i = 0;
-    //        foreach (FuzzyTiles tile in tilesList)
-    //        {
-    //            {
-    //                if (gameManager_.isTDM())
-    //                {
-    //                    // sets cube colour based on its threat value
-    //                    //Gizmos.color = Color.Lerp(Color.blue, Color.red, (tile.getTeamThreatLevel(team) / 100f));
-
-    //                    Gizmos.DrawCube(tile.getLocation(), defaultVec);
-    //                }
-    //                else
-    //                {
-    //                    // sets cube colour based on its threat value
-    //                    //Gizmos.color = Color.Lerp(Color.blue, Color.red, (tile.getThreatLevel() / 100f));
-    //                    Gizmos.DrawCube(tile.getLocation(), defaultVec);
-    //                }
-    //            }
-    //            i++;
-    //        }
-    //        //foreach (PossibleFuzzySpawns pfs in possibleTeam1)
-    //        //{
-    //        //    Gizmos.color = Color.green;
-    //        //    Gizmos.DrawCube(pfs.getLocation(), defaultVec);
-    //        //}
-    //        //foreach (PossibleFuzzySpawns pfs in possibleTeam2)
-    //        //{
-    //        //    Gizmos.color = Color.blue;
-    //        //    Gizmos.DrawCube(pfs.getLocation(), defaultVec);
-    //        //}
-    //    }
-    //}
+    private void OnDrawGizmos()
+    {
+        // draws the heatmap (only going to be used for demos)
+        if (tilesList != null)
+        {
+            int i = 0;
+            foreach (FuzzyTiles tile in tilesList)
+            {
+                {
+                    if (gameManager_.isTDM())
+                    {
+                        Gizmos.DrawCube(tile.getLocation() - Vector3.up * 0.52f, defaultVec);
+                    }
+                    else
+                    {
+                        Gizmos.DrawCube(tile.getLocation() - Vector3.up * 0.52f, defaultVec);
+                    }
+                }
+                i++;
+            }
+        }
+    }
 }

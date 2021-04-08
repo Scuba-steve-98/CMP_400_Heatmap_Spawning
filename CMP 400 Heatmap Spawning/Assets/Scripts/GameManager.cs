@@ -52,49 +52,9 @@ public class GameManager : MonoBehaviour
             playersInTeam2++;
         }
 
-        //Debug.Log(noOfPlayers + " " + playersInTeam);
+        Debug.Log(noOfPlayers + " " + playersInTeam);
         ranking = new int[noOfPlayers];
         playersScore = new int[noOfPlayers];
-
-
-        //switch (gameType)
-        //{
-        //    case GAMETYPE.TEST:
-        //        break;
-
-        //    case GAMETYPE.FFA:
-        //        FFAInit();
-        //        teamScore = new int[noOfPlayers];
-        //        teamDeaths = new int[noOfPlayers];
-        //        break;
-
-        //    case GAMETYPE.TDM:
-        //        TDMInit();
-        //        teamScore = new int[2];
-        //        teamDeaths = new int[2];
-        //        break;
-
-        //    default:
-        //        break;
-        //}
-
-        //switch (spawnType)
-        //{
-        //    case SPAWN_TYPE.RULE_BASED:
-        //        RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
-        //        rbss.init();
-        //        break;
-
-        //    case SPAWN_TYPE.FUZZY:
-        //        FuzzySpawnSelector fss = FindObjectOfType<FuzzySpawnSelector>();
-        //        fss.init();
-        //        break;
-
-        //    case SPAWN_TYPE.COD:
-        //        break;
-        //    default:
-        //        break;
-        //}
     }
 
     // Update is called once per frame
@@ -137,6 +97,10 @@ public class GameManager : MonoBehaviour
                     break;
 
                 case SPAWN_TYPE.COD:
+                    break;
+
+                case SPAWN_TYPE.HALO:
+                    HaloCESpawnSelector hcess = FindObjectOfType<HaloCESpawnSelector>();
                     break;
                 default:
                     break;

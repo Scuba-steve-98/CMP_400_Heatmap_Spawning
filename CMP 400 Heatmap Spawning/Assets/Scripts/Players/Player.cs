@@ -86,7 +86,6 @@ public class Player : MonoBehaviour
     public void setTeam(int teamNo)
     {
         team = teamNo;
-        Debug.Log(team);
         if (team == 0)
         {
             rend.material.color = Color.green;

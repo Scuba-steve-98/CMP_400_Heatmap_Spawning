@@ -62,7 +62,7 @@ public class FuzzyHeatmapSetup : MonoBehaviour
                 rayStart = bottomLeft + rightIncrementation / 2 + forwardIncrementation / 2 + (((float)i * (rightIncrementation / 2)) * scale) + (((float)j * (forwardIncrementation / 2)) * scale);
 
                 // creates the ray that will check if it collides with scenery
-                Ray ray = new Ray(rayStart, Vector3.up);
+                Ray ray = new Ray(rayStart - Vector3.up * 0.2f, Vector3.up);
                 if (!Physics.Raycast(ray, 5, tempLayerMask))
                 {
                     // initialises the array if it doesn't collide with an object on the scenery layer
