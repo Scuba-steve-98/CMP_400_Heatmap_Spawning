@@ -27,8 +27,10 @@ public class FuzzyHeatmapData : MonoBehaviour
 
     GameManager gameManager_;
 
-    [SerializeField, Range(0, 1)]
-    int team = 0;
+    Vector3 location;
+
+    //[SerializeField, Range(0, 1)]
+    //int team = 0;
 
     [SerializeField, Range(0, 75)]
     float targetThreatValue = 32;
@@ -131,10 +133,10 @@ public class FuzzyHeatmapData : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            getHeatmapData();
-        }
+        //if (Input.GetKeyDown(KeyCode.Space))
+        //{
+        //    getHeatmapData();
+        //}
     }
 
 
@@ -148,7 +150,7 @@ public class FuzzyHeatmapData : MonoBehaviour
         tilesList.AddRange(ft);
     }
 
-    void getHeatmapData()
+    public Vector3 getHeatmapData(int team)
     {
         // resets tiles closeness
         resetList();
@@ -273,25 +275,28 @@ public class FuzzyHeatmapData : MonoBehaviour
                 }
             }
         }
-        if (gameManager_.getSpawnType() == SPAWN_TYPE.FUZZY)
+        if (gameManager_.isTDM())
         {
-            if (gameManager_.isTDM())
+            FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
+            if (team == 0)
             {
-                FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
-                if (team == 0)
-                {
-                    flss.chooseTDMSpawnLocation(team, possibleTeam1);
-                }
-                else
-                {
-                    flss.chooseTDMSpawnLocation(team, possibleTeam2);
-                }
+                location = flss.chooseTDMSpawnLocation(team, possibleTeam1);
+                location.y += 1.1f;
+                return location;
             }
             else
             {
-                FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
-                flss.chooseFFASpawnLocation(possibleFFA);
+                location = flss.chooseTDMSpawnLocation(team, possibleTeam2);
+                location.y += 1.1f;
+                return location;
             }
+        }
+        else
+        {
+            FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
+            location = flss.chooseFFASpawnLocation(possibleFFA);
+            location.y += 1.1f;
+            return location;
         }
     }
 

@@ -96,9 +96,6 @@ public class GameManager : MonoBehaviour
                     fss.init();
                     break;
 
-                case SPAWN_TYPE.COD:
-                    break;
-
                 case SPAWN_TYPE.HALO:
                     HaloCESpawnSelector hcess = FindObjectOfType<HaloCESpawnSelector>();
                     break;

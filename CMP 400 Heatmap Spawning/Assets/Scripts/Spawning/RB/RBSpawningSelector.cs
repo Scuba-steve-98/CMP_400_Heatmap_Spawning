@@ -79,7 +79,7 @@ public class RBSpawningSelector : MonoBehaviour
     }
 
 
-    public void chooseFFASpawnLocation(PossibleSpawns[] tiles_)
+    public Vector3 chooseFFASpawnLocation(PossibleSpawns[] tiles_)
     {
         for (int i = 0; i < numberOfTiles; i++)
         {
@@ -114,7 +114,7 @@ public class RBSpawningSelector : MonoBehaviour
             if (enemiesSeen == 0)
             {
                 tiles_[i].setSpawn();
-                return;
+                return tiles_[i].getLocation();
             }
         }
 
@@ -125,7 +125,7 @@ public class RBSpawningSelector : MonoBehaviour
         if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
         {
             tiles_[0].setSpawn();
-            return;
+            return tiles_[0].getLocation();
         }
         else
         {
@@ -140,14 +140,15 @@ public class RBSpawningSelector : MonoBehaviour
                 Debug.Log("none yet");
                 x++;
             }
-            tiles_[UnityEngine.Random.Range(0, x)].setSpawn();
+            int q = UnityEngine.Random.Range(0, x);
+            tiles_[q].setSpawn();
             Debug.Log(x);
-            return;
+            return tiles_[q].getLocation();
         }
     }
 
 
-    public void chooseTDMSpawnLocation(int team, PossibleSpawns[] tiles_)
+    public Vector3 chooseTDMSpawnLocation(int team, PossibleSpawns[] tiles_)
     {
         for (int i = 0; i < numberOfTiles; i++)
         {
@@ -224,10 +225,11 @@ public class RBSpawningSelector : MonoBehaviour
         if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
         {
             tiles_[0].setSpawn();
-            return;
+            return tiles_[0].getLocation();
         }
         else
         {
+            int q = 0;
             for (int i = 0; i < tiles_.Length; i++)
             {
                 if ((i+1) < tiles_.Length)
@@ -235,31 +237,35 @@ public class RBSpawningSelector : MonoBehaviour
                     if (tiles_[i].getClosest() > tiles_[i + 1].getClosest())
                     {
                         Debug.Log("yeet");
-                        tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
+                        q = UnityEngine.Random.Range(0, i);
+                        tiles_[q].setSpawn();
                         break;
                     }
                     if (tiles_[i].getFriendliesSeen() > tiles_[i + 1].getFriendliesSeen())
                     {
                         Debug.Log("meet");
-                        tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
+                        q = UnityEngine.Random.Range(0, i);
+                        tiles_[q].setSpawn();
                         break;
                     }
                     if (tiles_[i].getClosestFriendly() < tiles_[i + 1].getClosestFriendly())
                     {
                         Debug.Log("beat");
-                        tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
+                        q = UnityEngine.Random.Range(0, i);
+                        tiles_[q].setSpawn();
                         break;
                     }
                 }
                 else
                 {
                     Debug.Log("NONE");
-                    tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
+                    q = UnityEngine.Random.Range(0, i);
+                    tiles_[q].setSpawn();
                 }
             }
             // just for demonstating that it works and where it has chosen
             demo = tiles_;
-            return;
+            return tiles_[q].getLocation();
         }
     }
 

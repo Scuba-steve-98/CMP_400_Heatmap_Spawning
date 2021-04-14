@@ -2,7 +2,6 @@
 {
     RULE_BASED,
     FUZZY,
-    COD,
     HALO
 }
 

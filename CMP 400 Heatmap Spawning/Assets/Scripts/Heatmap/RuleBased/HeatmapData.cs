@@ -21,8 +21,10 @@ public class HeatmapData : MonoBehaviour
 
     GameManager gameManager_;
 
-    [SerializeField, Range(0, 1)]
-    int team = 0;
+    Vector3 location;
+
+    //[SerializeField, Range(0, 1)]
+    //int team = 0;
 
     [SerializeField, Range(0, 75)]
     float targetThreatValue = 32;
@@ -68,13 +70,13 @@ public class HeatmapData : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Space))
-        {
-            getHeatmapData();
-        }
+        //if(Input.GetKeyDown(KeyCode.Space))
+        //{
+        //    getHeatmapData();
+        //}
     }
 
-    void getHeatmapData()
+    public Vector3 getHeatmapData(int team)
     {
         // resets tiles closeness
         resetArrays();
@@ -171,25 +173,28 @@ public class HeatmapData : MonoBehaviour
                 }
             }
         }
-        if (gameManager_.getSpawnType() == SPAWN_TYPE.RULE_BASED)
+        if (gameManager_.isTDM())
         {
-            if (gameManager_.isTDM())
+            RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
+            if (team == 0)
             {
-                RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
-                if (team == 0)
-                {
-                    rbss.chooseTDMSpawnLocation(team, possibleP1SpawnAreas);
-                }
-                else
-                {
-                    rbss.chooseTDMSpawnLocation(team, possibleP2SpawnAreas);
-                }
+                location = rbss.chooseTDMSpawnLocation(team, possibleP1SpawnAreas);
+                location.y += 1.1f;
+                return location;
             }
             else
             {
-                RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
-                rbss.chooseFFASpawnLocation(possibleFFASpawnAreas);
+                location = rbss.chooseTDMSpawnLocation(team, possibleP1SpawnAreas);
+                location.y += 1.1f;
+                return location;
             }
+        }
+        else
+        {
+            RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
+            location = rbss.chooseTDMSpawnLocation(team, possibleP1SpawnAreas);
+            location.y += 1.1f;
+            return location;
         }
     }
 
@@ -222,23 +227,23 @@ public class HeatmapData : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (tilesList != null)
-        {
-            foreach (Tiles tile in tilesList)
-            {
-                if (gameManager_.isTDM())
-                {
-                    // sets cube colour based on its threat value
-                    Gizmos.color = Color.Lerp(Color.blue, Color.red, (tile.getTeamThreatLevel(team) / 150f));
-                    Gizmos.DrawCube(tile.getLocation() - Vector3.up * 0.52f, defaultVec);
-                }
-                else
-                {
-                    // sets cube colour based on its threat value
-                    Gizmos.color = Color.Lerp(Color.blue, Color.red, (tile.getThreatLevel() / 150f));
-                    Gizmos.DrawCube(tile.getLocation() - Vector3.up * 0.52f, defaultVec);
-                }
-            }
-        }
+        //if (tilesList != null)
+        //{
+        //    foreach (Tiles tile in tilesList)
+        //    {
+        //        if (gameManager_.isTDM())
+        //        {
+        //            // sets cube colour based on its threat value
+        //            Gizmos.color = Color.Lerp(Color.blue, Color.red, (tile.getTeamThreatLevel(team) / 150f));
+        //            Gizmos.DrawCube(tile.getLocation() - Vector3.up * 0.52f, defaultVec);
+        //        }
+        //        else
+        //        {
+        //            // sets cube colour based on its threat value
+        //            Gizmos.color = Color.Lerp(Color.blue, Color.red, (tile.getThreatLevel() / 150f));
+        //            Gizmos.DrawCube(tile.getLocation() - Vector3.up * 0.52f, defaultVec);
+        //        }
+        //    }
+        //}
     }
 }

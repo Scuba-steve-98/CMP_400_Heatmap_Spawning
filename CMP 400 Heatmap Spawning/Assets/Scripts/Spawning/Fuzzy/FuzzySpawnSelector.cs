@@ -89,7 +89,7 @@ public class FuzzySpawnSelector : MonoBehaviour
     }
 
 
-    public void chooseFFASpawnLocation(List<PossibleFuzzySpawns> tiles_)
+    public Vector3 chooseFFASpawnLocation(List<PossibleFuzzySpawns> tiles_)
     {
         //tiles_ = heatmap_.getFFATiles();
 
@@ -129,12 +129,13 @@ public class FuzzySpawnSelector : MonoBehaviour
         {
             tiles_[0].setSpawn();
             demo = tiles_;
-            return;
+            return tiles_[0].getLocation();
         }
         else
         {
             Debug.Log(tiles_.Count);
             int x = 0;
+            int q = 0;
             for (int i = 0; i < tiles_.Count; i++)
             {
                 if ((i + 1) < tiles_.Count)
@@ -143,28 +144,35 @@ public class FuzzySpawnSelector : MonoBehaviour
                     {
                         if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
                         {
-                            tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
-                            return;
+                            q = UnityEngine.Random.Range(0, i);
+                            tiles_[q].setSpawn();
+                            return tiles_[q].getLocation();
                         }
                     }
                     else
                     {
-                        tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
-                        return;
+                        q = UnityEngine.Random.Range(0, i);
+                        tiles_[q].setSpawn();
+                        return tiles_[q].getLocation();
                     }
                 }
                 else
                 {
-                    tiles_[UnityEngine.Random.Range(0, i)].setSpawn();
+                    q = UnityEngine.Random.Range(0, i);
+                    tiles_[q].setSpawn();
                     demo = tiles_;
-                    return;
+                    return tiles_[q].getLocation();
                 }
             }
+            q = UnityEngine.Random.Range(0, tiles_.Count);
+            tiles_[q].setSpawn();
+            demo = tiles_;
+            return tiles_[q].getLocation();
         }
     }
 
 
-    public void chooseTDMSpawnLocation(int team, List<PossibleFuzzySpawns> tiles_)
+    public Vector3 chooseTDMSpawnLocation(int team, List<PossibleFuzzySpawns> tiles_)
     {
         //tiles_ = heatmap_.getTDMTiles(team);
 
@@ -252,11 +260,12 @@ public class FuzzySpawnSelector : MonoBehaviour
         {
             tiles_[0].setSpawn();
             demo = tiles_;
-            return;
+            return tiles_[0].getLocation();
         }
         else
         {
             int x = 0;
+            int q = 0;
             while (tiles_[x].getEnemiesSeen() == tiles_[x + 1].getEnemiesSeen())
             {
                 if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
@@ -279,9 +288,10 @@ public class FuzzySpawnSelector : MonoBehaviour
                 Debug.Log("none yet");
                 x++;
             }
-            tiles_[UnityEngine.Random.Range(0, x)].setSpawn();
+            q = UnityEngine.Random.Range(0, x);
+            tiles_[q].setSpawn();
             demo = tiles_;
-            return;
+            return tiles_[q].getLocation();
         }
     }
 
