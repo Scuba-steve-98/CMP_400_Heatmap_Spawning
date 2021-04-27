@@ -24,15 +24,15 @@ public class RBSpawningSelector : MonoBehaviour
     {
         defaultVec = new Vector3(1, 0.75f, 1) * 2;
 
-        layerMask |= 1 << 9;
+        layerMask = 1 << 9;
         layerMask |= 1 << 10;
         layerMask = ~layerMask;
     }
 
     public void init()
     {
-        players_ = FindObjectsOfType<Player>();
         gameManager_ = FindObjectOfType<GameManager>();
+        players_ = FindObjectsOfType<Player>();
         if (gameManager_.isTDM())
         {
             int team1Counter = 0;
@@ -95,18 +95,19 @@ public class RBSpawningSelector : MonoBehaviour
             {
                 Ray ray = new Ray(tiles_[i].getLocation(), (enemy.transform.position - tiles_[i].getLocation()));
                 RaycastHit hit;
-                Physics.Raycast(ray, out hit, 100, layerMask);
-                if (hit.collider.gameObject == enemy.gameObject)
+                if (Physics.Raycast(ray, out hit, 100, layerMask))
                 {
-                    enemiesSeen++;
-                    float dist = Vector3.Distance(tiles_[i].getLocation(), enemy.transform.position);
-                    if (dist < closest)
+                    if (hit.collider.gameObject == enemy.gameObject)
                     {
-                        closest = dist;
+                        enemiesSeen++;
+                        float dist = Vector3.Distance(tiles_[i].getLocation(), enemy.transform.position);
+                        if (dist < closest)
+                        {
+                            closest = dist;
+                        }
                     }
                 }
             }
-            Debug.Log(enemiesSeen);
             tiles_[i].setEnemiesSeen(enemiesSeen);
             tiles_[i].setClosest(closest);
 
@@ -134,10 +135,8 @@ public class RBSpawningSelector : MonoBehaviour
             {
                 if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
                 {
-                    Debug.Log("yeet");
                     break;
                 }
-                Debug.Log("none yet");
                 x++;
             }
             int q = UnityEngine.Random.Range(0, x);
@@ -177,14 +176,16 @@ public class RBSpawningSelector : MonoBehaviour
             {
                 Ray ray = new Ray(tiles_[i].getLocation(), (enemy.transform.position - tiles_[i].getLocation()));
                 RaycastHit hit;
-                Physics.Raycast(ray, out hit, 100, layerMask);
-                if (hit.collider.gameObject == enemy.gameObject)
+                if (Physics.Raycast(ray, out hit, 100, layerMask))
                 {
-                    enemiesSeen++;
-                    float dist = Vector3.Distance(tiles_[i].getLocation(), enemy.transform.position);
-                    if (dist < closest)
+                    if (hit.collider.gameObject == enemy.gameObject)
                     {
-                        closest = dist;
+                        enemiesSeen++;
+                        float dist = Vector3.Distance(tiles_[i].getLocation(), enemy.transform.position);
+                        if (dist < closest)
+                        {
+                            closest = dist;
+                        }
                     }
                 }
             }
@@ -192,14 +193,16 @@ public class RBSpawningSelector : MonoBehaviour
             {
                 Ray ray = new Ray(tiles_[i].getLocation(), (friendly.transform.position - tiles_[i].getLocation()));
                 RaycastHit hit;
-                Physics.Raycast(ray, out hit, 100, layerMask);
-                if (hit.collider.gameObject == friendly.gameObject)
+                if (Physics.Raycast(ray, out hit, 100, layerMask))
                 {
-                    friendliesSeen++;
-                    float dist = Vector3.Distance(tiles_[i].getLocation(), friendly.transform.position);
-                    if (dist < closestFriendly)
+                    if (hit.collider.gameObject == friendly.gameObject)
                     {
-                        closestFriendly = dist;
+                        friendliesSeen++;
+                        float dist = Vector3.Distance(tiles_[i].getLocation(), friendly.transform.position);
+                        if (dist < closestFriendly)
+                        {
+                            closestFriendly = dist;
+                        }
                     }
                 }
             }
@@ -217,14 +220,10 @@ public class RBSpawningSelector : MonoBehaviour
         Array.Reverse(tiles_);
         Array.Sort<PossibleSpawns>(tiles_, delegate (PossibleSpawns x, PossibleSpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
 
-        for (int i = 0; i < tiles_.Length; i++)
-        {
-            Debug.Log("Close: " + tiles_[i].getClosest() + "   Enemies: " + tiles_[i].getEnemiesSeen());
-        }
-
         if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
         {
             tiles_[0].setSpawn();
+            demo = tiles_;
             return tiles_[0].getLocation();
         }
         else
@@ -236,21 +235,18 @@ public class RBSpawningSelector : MonoBehaviour
                 {
                     if (tiles_[i].getClosest() > tiles_[i + 1].getClosest())
                     {
-                        Debug.Log("yeet");
                         q = UnityEngine.Random.Range(0, i);
                         tiles_[q].setSpawn();
                         break;
                     }
                     if (tiles_[i].getFriendliesSeen() > tiles_[i + 1].getFriendliesSeen())
                     {
-                        Debug.Log("meet");
                         q = UnityEngine.Random.Range(0, i);
                         tiles_[q].setSpawn();
                         break;
                     }
                     if (tiles_[i].getClosestFriendly() < tiles_[i + 1].getClosestFriendly())
                     {
-                        Debug.Log("beat");
                         q = UnityEngine.Random.Range(0, i);
                         tiles_[q].setSpawn();
                         break;
@@ -258,7 +254,6 @@ public class RBSpawningSelector : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("NONE");
                     q = UnityEngine.Random.Range(0, i);
                     tiles_[q].setSpawn();
                 }

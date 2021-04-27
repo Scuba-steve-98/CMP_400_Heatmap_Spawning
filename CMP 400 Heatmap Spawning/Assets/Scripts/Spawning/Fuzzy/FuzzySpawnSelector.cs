@@ -33,7 +33,7 @@ public class FuzzySpawnSelector : MonoBehaviour
         demo = new List<PossibleFuzzySpawns>();
         defaultVec = new Vector3(1, 0.75f, 1) * 2;
 
-        layerMask |= 1 << 9;
+        layerMask = 1 << 9;
         layerMask |= 1 << 10;
         layerMask = ~layerMask;
     }
@@ -41,6 +41,7 @@ public class FuzzySpawnSelector : MonoBehaviour
     public void init()
     {
         gameManager_ = FindObjectOfType<GameManager>();
+        players_ = FindObjectsOfType<Player>();
         if (gameManager_.isTDM())
         {
             int team1Counter = 0;
@@ -79,7 +80,6 @@ public class FuzzySpawnSelector : MonoBehaviour
             enemy_ = team2_;
             friendly_ = team1_;
         }
-        players_ = FindObjectsOfType<Player>();
         mapWidth = heatmap_.getWidth();
     }
 
@@ -91,8 +91,6 @@ public class FuzzySpawnSelector : MonoBehaviour
 
     public Vector3 chooseFFASpawnLocation(List<PossibleFuzzySpawns> tiles_)
     {
-        //tiles_ = heatmap_.getFFATiles();
-
         for (int i = 0; i < tiles_.Count; i++)
         {
             tiles_[i].setSpawn(false);
@@ -106,14 +104,18 @@ public class FuzzySpawnSelector : MonoBehaviour
             {
                 Ray ray = new Ray(tiles_[i].getLocation(), (enemy.transform.position - tiles_[i].getLocation()));
                 RaycastHit hit;
-                Physics.Raycast(ray, out hit, 100, layerMask);
-                if (hit.collider.gameObject == enemy.gameObject)
+
+                if (Physics.Raycast(ray, out hit, 100, layerMask))
                 {
-                    enemies++;
-                    float dist = Vector3.Distance(tiles_[i].getLocation(), enemy.transform.position);
-                    if (dist < closest)
+
+                    if (hit.collider.gameObject == enemy.gameObject)
                     {
-                        closest = dist;
+                        enemies++;
+                        float dist = Vector3.Distance(tiles_[i].getLocation(), enemy.transform.position);
+                        if (dist < closest)
+                        {
+                            closest = dist;
+                        }
                     }
                 }
             }
@@ -125,6 +127,7 @@ public class FuzzySpawnSelector : MonoBehaviour
         tiles_.Reverse();
         tiles_.Sort(delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
 
+
         if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
         {
             tiles_[0].setSpawn();
@@ -133,7 +136,6 @@ public class FuzzySpawnSelector : MonoBehaviour
         }
         else
         {
-            Debug.Log(tiles_.Count);
             int x = 0;
             int q = 0;
             for (int i = 0; i < tiles_.Count; i++)
@@ -164,7 +166,14 @@ public class FuzzySpawnSelector : MonoBehaviour
                     return tiles_[q].getLocation();
                 }
             }
-            q = UnityEngine.Random.Range(0, tiles_.Count);
+
+            do
+            {
+                q = UnityEngine.Random.Range(0, tiles_.Count - 1);
+                Debug.Log(q);
+            } while (q < 0 || q >= tiles_.Count - 1);
+            Debug.Log(q);
+
             tiles_[q].setSpawn();
             demo = tiles_;
             return tiles_[q].getLocation();
@@ -174,8 +183,6 @@ public class FuzzySpawnSelector : MonoBehaviour
 
     public Vector3 chooseTDMSpawnLocation(int team, List<PossibleFuzzySpawns> tiles_)
     {
-        //tiles_ = heatmap_.getTDMTiles(team);
-
         for (int i = 0; i < tiles_.Count; i++)
         {
             tiles_[i].setSpawn(false);
@@ -202,14 +209,16 @@ public class FuzzySpawnSelector : MonoBehaviour
             {
                 Ray ray = new Ray(tiles_[i].getLocation(), (enemy.transform.position - tiles_[i].getLocation()));
                 RaycastHit hit;
-                Physics.Raycast(ray, out hit, 100, layerMask);
-                if (hit.collider.gameObject == enemy.gameObject)
+                if (Physics.Raycast(ray, out hit, 100, layerMask))
                 {
-                    enemies++;
-                    float dist = Vector3.Distance(tiles_[i].getLocation(), enemy.transform.position);
-                    if (dist < closest)
+                    if (hit.collider.gameObject == enemy.gameObject)
                     {
-                        closest = dist;
+                        enemies++;
+                        float dist = Vector3.Distance(tiles_[i].getLocation(), enemy.transform.position);
+                        if (dist < closest)
+                        {
+                            closest = dist;
+                        }
                     }
                 }
             }
@@ -217,14 +226,16 @@ public class FuzzySpawnSelector : MonoBehaviour
             {
                 Ray ray = new Ray(tiles_[i].getLocation(), (friendly.transform.position - tiles_[i].getLocation()));
                 RaycastHit hit;
-                Physics.Raycast(ray, out hit, 100, layerMask);
-                if (hit.collider.gameObject == friendly.gameObject)
+                if (Physics.Raycast(ray, out hit, 100, layerMask))
                 {
-                    friendliesSeen++;
-                    float dist = Vector3.Distance(tiles_[i].getLocation(), friendly.transform.position);
-                    if (dist < closestFriendly)
+                    if (hit.collider.gameObject == friendly.gameObject)
                     {
-                        closestFriendly = dist;
+                        friendliesSeen++;
+                        float dist = Vector3.Distance(tiles_[i].getLocation(), friendly.transform.position);
+                        if (dist < closestFriendly)
+                        {
+                            closestFriendly = dist;
+                        }
                     }
                 }
             }
@@ -251,11 +262,6 @@ public class FuzzySpawnSelector : MonoBehaviour
         tiles_.Reverse();
         tiles_.Sort(delegate (PossibleFuzzySpawns x, PossibleFuzzySpawns y) { return x.getEnemiesSeen().CompareTo(y.getEnemiesSeen()); });
 
-        foreach (PossibleFuzzySpawns pfs in tiles_)
-        {
-            Debug.Log("Enemies Seen: " + pfs.getEnemiesSeen() + " Enemy Closeness: " + pfs.getClosest());
-        }
-
         if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
         {
             tiles_[0].setSpawn();
@@ -264,32 +270,37 @@ public class FuzzySpawnSelector : MonoBehaviour
         }
         else
         {
-            int x = 0;
             int q = 0;
-            while (tiles_[x].getEnemiesSeen() == tiles_[x + 1].getEnemiesSeen())
+            for (int i = 0; i < tiles_.Count; i++)
             {
-                if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
+                if ((i + 1) < tiles_.Count)
                 {
-                    Debug.Log("yeet");
-                    break;
+                    if (tiles_[i].getClosest() > tiles_[i + 1].getClosest())
+                    {
+                        q = UnityEngine.Random.Range(0, i);
+                        tiles_[q].setSpawn();
+                        break;
+                    }
+                    if (tiles_[i].getFriendliesSeen() > tiles_[i + 1].getFriendliesSeen())
+                    {
+                        q = UnityEngine.Random.Range(0, i);
+                        tiles_[q].setSpawn();
+                        break;
+                    }
+                    if (tiles_[i].getClosestFriendly() < tiles_[i + 1].getClosestFriendly())
+                    {
+                        q = UnityEngine.Random.Range(0, i);
+                        tiles_[q].setSpawn();
+                        break;
+                    }
                 }
-                Debug.Log("a");
-                if (tiles_[x].getFriendliesSeen() > tiles_[x + 1].getFriendliesSeen())
+                else
                 {
-                    Debug.Log("meet");
-                    break;
+                    q = UnityEngine.Random.Range(0, i);
+                    tiles_[q].setSpawn();
                 }
-                Debug.Log("b");
-                if (tiles_[x].getClosestFriendly() < tiles_[x + 1].getClosestFriendly())
-                {
-                    Debug.Log("beat");
-                    break;
-                }
-                Debug.Log("none yet");
-                x++;
             }
-            q = UnityEngine.Random.Range(0, x);
-            tiles_[q].setSpawn();
+            // just for demonstating that it works and where it has chosen
             demo = tiles_;
             return tiles_[q].getLocation();
         }

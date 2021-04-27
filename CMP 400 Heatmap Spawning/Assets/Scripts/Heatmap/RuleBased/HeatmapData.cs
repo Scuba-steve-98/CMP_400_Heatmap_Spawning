@@ -9,7 +9,7 @@ public class HeatmapData : MonoBehaviour
     int layerMask, scale;
     int numberOfTiles = 45;
 
-    float distance, colliderRadius, threatLevel, team1Threat, team2Threat, team1Friendly, team2Friendly;
+    float distance, colliderRadius, team1Threat, team2Threat, team1Friendly, team2Friendly;
 
     Vector3 rayStart, defaultVec;
 
@@ -26,8 +26,8 @@ public class HeatmapData : MonoBehaviour
     //[SerializeField, Range(0, 1)]
     //int team = 0;
 
-    [SerializeField, Range(0, 75)]
-    float targetThreatValue = 32;
+    //[SerializeField, Range(0, 75)]
+    float targetThreatValue;
 
     // Start is called before the first frame update
     void Start()
@@ -35,7 +35,7 @@ public class HeatmapData : MonoBehaviour
         // initialise variables
         distance = 0f;
         layerMask = 1 << 9;
-        threatLevel = 0;
+        targetThreatValue = 0;
         scale = 2;
 
         // just a vector for drawing the gizmos cubes for the demo
@@ -76,10 +76,45 @@ public class HeatmapData : MonoBehaviour
         //}
     }
 
-    public Vector3 getHeatmapData(int team)
+    public Vector3 getHeatmapData(int team, int kills, int deaths, float threatLevel)
     {
         // resets tiles closeness
         resetArrays();
+
+        if (gameManager_.isTDM())
+        {
+            float currentThreatLevel = threatLevel * gameManager_.getTeamThreat(Mathf.Abs(team - 1));
+            if (currentThreatLevel > 200)
+            {
+                currentThreatLevel = 200;
+            }
+            targetThreatValue = currentThreatLevel;
+        }
+        else
+        {
+            if (kills > deaths)
+            {
+                float multiplier = Mathf.Lerp(0.6f, 0.8f, gameManager_.getGameProgress());
+                float currentThreatMultiplier = threatLevel / multiplier;
+                if (currentThreatMultiplier >= 200)
+                {
+                    currentThreatMultiplier = 200;
+                }
+                targetThreatValue = currentThreatMultiplier;
+                Debug.Log("Target Level: " + targetThreatValue + "    Threat Level: " + threatLevel + "   KD: " + kills + "/" + deaths);
+            }
+            else
+            {
+                float multiplier = Mathf.Lerp(0.6f, 0.8f, gameManager_.getGameProgress());
+                float currentThreatMultiplier = threatLevel * multiplier;
+                if (currentThreatMultiplier >= 200)
+                {
+                    currentThreatMultiplier = 200;
+                }
+                targetThreatValue = currentThreatMultiplier;
+                Debug.Log("Target Level: " + targetThreatValue + "    Threat Level: " + threatLevel + "   KD: " + kills + "/" + deaths);
+            }
+        }
 
         // loops through for the number of active tiles
         for (int i = 0; i < tilesList.Count; i++)
@@ -115,7 +150,15 @@ public class HeatmapData : MonoBehaviour
                             distance = Vector3.Distance(rayStart, hit[c].transform.position);
 
                             team1Threat += Mathf.Lerp(threat, 0, distance / (colliderRadius / 2f));
+                            if (team1Threat >= 200)
+                            {
+                                team1Threat = 200;
+                            }
                             team2Friendly += Mathf.Lerp(friendly, 0, distance / (colliderRadius / 2f)) / 2;
+                            if (team2Friendly >= 90)
+                            {
+                                team2Friendly = 90;
+                            }
                         }
                         else if (hit[c].collider.GetComponentInParent<Player>().getTeam() == 1)
                         {
@@ -126,7 +169,15 @@ public class HeatmapData : MonoBehaviour
                             distance = Vector3.Distance(rayStart, hit[c].transform.position);
 
                             team2Threat += Mathf.Lerp(threat, 0, distance / (colliderRadius / 2f));
+                            if (team2Threat >= 200)
+                            {
+                                team2Threat = 200;
+                            }
                             team1Friendly += Mathf.Lerp(friendly, 0, distance / (colliderRadius / 2f)) / 2;
+                            if (team1Friendly >= 90)
+                            {
+                                team1Friendly = 90;
+                            }
                         }
                     }
                     else
@@ -138,6 +189,10 @@ public class HeatmapData : MonoBehaviour
                         // calculates the threat level for the tile
                         distance = Vector3.Distance(rayStart, hit[c].transform.position);
                         threatLevel += Mathf.Lerp(threat, 0, distance / (colliderRadius / 2f));
+                        if (threatLevel >= 200)
+                        {
+                            threatLevel = 200;
+                        }
                     }
                 }
             }
@@ -184,7 +239,7 @@ public class HeatmapData : MonoBehaviour
             }
             else
             {
-                location = rbss.chooseTDMSpawnLocation(team, possibleP1SpawnAreas);
+                location = rbss.chooseTDMSpawnLocation(team, possibleP2SpawnAreas);
                 location.y += 1.1f;
                 return location;
             }
@@ -192,7 +247,7 @@ public class HeatmapData : MonoBehaviour
         else
         {
             RBSpawningSelector rbss = FindObjectOfType<RBSpawningSelector>();
-            location = rbss.chooseTDMSpawnLocation(team, possibleP1SpawnAreas);
+            location = rbss.chooseFFASpawnLocation(possibleFFASpawnAreas);
             location.y += 1.1f;
             return location;
         }

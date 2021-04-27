@@ -41,14 +41,15 @@ public class Player : MonoBehaviour
     //protected Animator Animator;
     protected float Cooldown;
     protected AudioSource AudioSourcePlayer;
-
-    [HideInInspector]
-    public bool Debug = false;
     //---------------------------------------------
     //---------------------------------------------
     //---------------------------------------------
 
+    bool isPlayer;
     float weaponDamage;
+
+    [SerializeField]
+    GameObject deathPoint;
 
     public struct PlayerData
     {
@@ -58,12 +59,13 @@ public class Player : MonoBehaviour
     }
 
     [HideInInspector]
-    public PlayerData pd;
+    public PlayerData playerData;
 
     GameManager gameManager_;
     HeatmapData heatmapData;
     FuzzyHeatmapData fuzzyHeatmapData;
     HaloCESpawnSelector haloCESpawnSelector;
+    LineRenderer lineRenderer;
 
     Vector3 spawnLocation;
     Renderer rend;
@@ -77,9 +79,10 @@ public class Player : MonoBehaviour
     [SerializeField, Range(60, 100)]
     float baseThreat = 67;
 
-    float health, threatLevel, friendlyLevel, deathCoolDown, currentEC;
+    float health, threatLevel, friendlyLevel, deathCoolDown, currentEC, threatLevelMultiplier;
 
-    int kills, deaths;
+    [HideInInspector]
+    public int kills, deaths;
 
     bool isDead = false;
     bool hasBeenEngaged = false;
@@ -103,11 +106,15 @@ public class Player : MonoBehaviour
         PistolHand.SetActive(false);
         // --------------------------------------------------
 
+        weaponDamage = 12.5f;
 
         gameManager_ = FindObjectOfType<GameManager>().GetComponent<GameManager>();
+        lineRenderer = GetComponent<LineRenderer>();
         threatLevel = baseThreat;
         friendlyLevel = baseThreat / 2;
         rend = GetComponent<Renderer>();
+        deaths = 0;
+        threatLevelMultiplier = 1;
 
         switch (gameManager_.getSpawnType())
         {
@@ -127,9 +134,22 @@ public class Player : MonoBehaviour
         health = 100;
         deathCoolDown = 2.0f;
 
-        layerMask |= 1 << 9;
-        layerMask |= 1 << 10;
+        layerMask = (1 << 9) | (1 << 10);
         layerMask = ~layerMask;
+
+        if (TryGetComponent<Controller>(out Controller c))
+        {
+            isPlayer = true;
+        }
+        else
+        {
+            isPlayer = false;
+        }
+
+        playerData.engagedCounter = new List<float>();
+
+        lineRenderer.startWidth = 0.01f;
+        lineRenderer.endWidth = 0.01f;
     }
 
     private void FixedUpdate()
@@ -153,7 +173,7 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (deaths != 0 && !hasBeenEngaged)
+        if (deaths > 0 && !hasBeenEngaged && !isDead)
         {
             currentEC += Time.deltaTime;
         }
@@ -167,73 +187,135 @@ public class Player : MonoBehaviour
             switch(gameManager_.getSpawnType())
             {
                 case SPAWN_TYPE.RULE_BASED:
-                    spawnLocation = heatmapData.getHeatmapData(team);
+                    isDead = false;
+                    spawnLocation = heatmapData.getHeatmapData(team, kills, deaths, threatLevel);
                     transform.position = spawnLocation;
+                    GetComponent<Enemy>().Respawned();
+                    health = 100;
                     break;
 
                 case SPAWN_TYPE.FUZZY:
-                    spawnLocation = fuzzyHeatmapData.getHeatmapData(team);
+                    isDead = false;
+                    spawnLocation = fuzzyHeatmapData.getHeatmapData(team, threatLevel, kills, deaths);
+                    transform.position = spawnLocation;
+                    GetComponent<Enemy>().Respawned();
+                    health = 100;
                     break;
 
                 case SPAWN_TYPE.HALO:
                     if (gameManager_.isTDM())
                     {
-                        haloCESpawnSelector.findTDMSpawn(team);
+                        isDead = false;
+                        spawnLocation = haloCESpawnSelector.findTDMSpawn(team);
+                        transform.position = spawnLocation;
+                        GetComponent<Enemy>().Respawned();
+                        health = 100;
                     }
                     else
                     {
-                        haloCESpawnSelector.findFFASpawn();
+                        isDead = false;
+                        spawnLocation = haloCESpawnSelector.findFFASpawn();
+                        transform.position = spawnLocation;
+                        GetComponent<Enemy>().Respawned();
+                        health = 100;
                     }
                     break;
                 default:
                     break;
             }
+            if (!isPlayer)
+            {
+                GetComponent<Rigidbody>().useGravity = true;
+            }
         }
 
 
-        // rest of code for this function is from the tutorial
+        // the rest of the code in this function was inspired by the tutorial, many edits were made to make it work in this project
         Cooldown -= Time.deltaTime;
 
-        if (Input.Shoot || Debug)
+        // my little function for the bullet lines
+        if (Cooldown < 0.1f)
         {
-            if (Cooldown <= 0 || Debug)
-            {
-                var shootVariation = UnityEngine.Random.insideUnitSphere;
+            lineRenderer.enabled = false;
+        }
 
-                //Animator.SetTrigger("Shoot");
-                //if (Animator.GetBool("AK") == true)
+        if (Input.Shoot && !isDead) // added death condition
+        {
+            if (Cooldown <= 0)
+            {
+                Vector3 shootVariation = UnityEngine.Random.insideUnitCircle;
+
+                // removed the animation and changed it to play based on what weapon is active
+                if (AKHand)
                 {
                     AudioSourcePlayer.PlayOneShot(AudioClipAK);
                     Cooldown = 0.2f;
                     shootVariation *= 0.02f;
                 }
+                else
+                {
+                    AudioSourcePlayer.PlayOneShot(AudioClipShot);
+                    Cooldown = 1f;
+                    shootVariation *= 0.01f;
+                }
 
-                var shootOrigin = transform.position + Vector3.up * 1.5f;
-                var shootDirection = (Input.ShootTarget - shootOrigin).normalized;
-                var shootRay = new Ray(shootOrigin, shootDirection + shootVariation);
+                Vector3 shootOrigin = AKHand.transform.position + Vector3.forward * -0.2f;
+                Vector3 shootDirection = AKHand.transform.position;
+                shootDirection += AKHand.transform.forward * 10;
+                shootDirection += Vector3.up * Random.Range(-0.5f, 0.5f) + Vector3.right * Random.Range(-0.5f, 0.5f);
+                shootDirection = shootDirection - shootOrigin;
+                Ray shootRay = new Ray(shootOrigin, shootDirection);
 
+                lineRenderer.SetPosition(0, AKHand.transform.position);
 
                 //do we hit anybody?
                 var hitInfo = new RaycastHit();
                 gameObject.layer = Physics.IgnoreRaycastLayer;
-                if (Physics.SphereCast(shootRay, 0.1f, out hitInfo, layerMask))
+                if (Physics.Raycast(shootRay, out hitInfo, 100, layerMask)) // changed to raycasting, some errors occurred with spherecasting
                 {
-                    UnityEngine.Debug.DrawLine(shootRay.origin, hitInfo.point, Color.red);
+                    Debug.DrawLine(shootRay.origin, hitInfo.point, Color.red);
+                    lineRenderer.SetPosition(1, hitInfo.point);
+                    lineRenderer.enabled = true;
 
                     var player = hitInfo.collider.GetComponent<Player>();
-                    if (player != null && !Debug && player != this)
+                    if (player != null && player != this)
                     {
-                        // My change to the tutorial code
-                        if (player.isShot(weaponDamage))
+
+                        // changed how player takes damage--------------------------------------------
+                        if (!player.IsDead())
                         {
-                            kills++;
-                            updateKD();
-                            if (!hasBeenEngaged)
+
+                            if (player.isShot(weaponDamage))
                             {
-                                hasBeenEngaged = true;
-                                currentEC += Time.deltaTime;
-                                pd.engagedCounter.Add(currentEC);
-                                currentEC = 0;
+                                kills++;
+                                if (gameManager_.isTDM())
+                                {
+                                    gameManager_.updateTDMScore(team);
+
+                                }
+                                else
+                                {
+                                    gameManager_.updateFFAScore(team);
+                                }
+
+                                updateKD();
+                                if (!hasBeenEngaged && deaths > 0)
+                                {
+                                    hasBeenEngaged = true;
+                                    currentEC += Time.deltaTime;
+                                    playerData.engagedCounter.Add(currentEC);
+                                    currentEC = 0;
+                                }
+                            }
+                            else
+                            {
+                                if (!hasBeenEngaged && deaths > 0)
+                                {
+                                    hasBeenEngaged = true;
+                                    currentEC += Time.deltaTime;
+                                    playerData.engagedCounter.Add(currentEC);
+                                    currentEC = 0;
+                                }
                             }
                         }
                         //--------------------------------
@@ -245,18 +327,15 @@ public class Player : MonoBehaviour
             }
         }
 
-
-        //var charVelo = Quaternion.Inverse(transform.rotation) * Rigidbody.velocity;
-        //Animator.SetFloat("SpeedForward", charVelo.z);
-        //Animator.SetFloat("SpeedSideward", charVelo.x * Mathf.Sign(charVelo.z + 0.1f));
-
+        // changed to fit there being no animations
         if (Input.SwitchToAK)
         {
             Input.SwitchToAK = false;
             AKBack.SetActive(false);
             AKHand.SetActive(true);
-            //Animator.SetBool("AK", true);
-            //Animator.SetBool("Pistol", false);
+            PistolBack.SetActive(true);
+            PistolHand.SetActive(false);
+            weaponDamage = 12.5f;
         }
 
         if (Input.SwitchToPistol)
@@ -264,12 +343,13 @@ public class Player : MonoBehaviour
             Input.SwitchToPistol = false;
             PistolBack.SetActive(false);
             PistolHand.SetActive(true);
-            //Animator.SetBool("AK", false);
-            //Animator.SetBool("Pistol", true);
+            AKBack.SetActive(true);
+            AKHand.SetActive(false);
+            weaponDamage = 34f;
         }
     }
 
-
+    // all code onwards is mine
     void killedEnemy()
     {
         kills++;
@@ -279,28 +359,62 @@ public class Player : MonoBehaviour
 
     void updateKD()
     {
+        threatLevel = 0;
+        friendlyLevel = 0;
         if (deaths == 0)
         {
-            if (gameManager_.getGameProgress() < 0.4f)
+            if (gameManager_.getGameProgress() > 0.4f)
             {
-                threatLevel = (kills / (1 / 3)) * overallKD;
+                threatLevel = (kills / 0.6f) * overallKD;
                 friendlyLevel = baseThreat / threatLevel;
                 threatLevel *= baseThreat;
             }
-            else if (gameManager_.getGameProgress() >= 0.4f)
+            else if (gameManager_.getGameProgress() <= 0.4f)
             {
                 threatLevel = (kills / 1) * overallKD;
                 friendlyLevel = baseThreat / threatLevel;
                 threatLevel *= baseThreat;
             }
-            pd.currentKD = kills;
+            playerData.currentKD = kills;
         }
         else if (deaths > 0)
         {
-            threatLevel = (kills / deaths) * overallKD;
-            friendlyLevel = baseThreat / threatLevel;
-            threatLevel *= baseThreat;
-            pd.currentKD = kills / deaths;
+            if (gameManager_.getGameProgress() < 0.6f && kills == 0)
+            {
+                threatLevel = overallKD / deaths;
+                friendlyLevel = baseThreat / threatLevel;
+                threatLevel *= baseThreat;
+                playerData.currentKD = kills / deaths;
+            }
+            else if (gameManager_.getGameProgress() >= 0.6f && kills == 0)
+            {
+                threatLevel = overallKD / (deaths * 2);
+                friendlyLevel = baseThreat / threatLevel;
+                threatLevel *= baseThreat;
+                playerData.currentKD = kills / deaths;
+            }
+            else if (kills > (deaths + 2))
+            {
+                threatLevel = Mathf.Lerp(1f, 3f, ((kills / deaths) / 6));
+                if (threatLevel == 0)
+                {
+                    Debug.LogError("Huh: " + kills + "  :  " + deaths);
+                }
+                friendlyLevel = baseThreat / threatLevel;
+                threatLevel *= baseThreat;
+                playerData.currentKD = kills / deaths;
+            }
+            else
+            {
+                threatLevel = (overallKD * kills) / deaths;
+                if (threatLevel == 0)
+                {
+                    Debug.LogError("Huh: " + kills + "  :  " + deaths);
+                }
+                friendlyLevel = baseThreat / threatLevel;
+                threatLevel *= baseThreat;
+                playerData.currentKD = kills / deaths;
+            }
         }
     }
     
@@ -326,7 +440,7 @@ public class Player : MonoBehaviour
 
     public float getThreatLevel()
     {
-        return threatLevel;
+        return threatLevel * threatLevelMultiplier;
     }
 
     public float getFriendLevel()
@@ -336,34 +450,76 @@ public class Player : MonoBehaviour
 
     public bool isShot(float dam)
     {
+        if (isDead)
+        {
+            return false;
+        }
         health -= dam;
-        if (!hasBeenEngaged)
+
+        if (health == 100)
+        {
+            threatLevelMultiplier = 1;
+        }
+        else if (health > 50)
+        {
+            threatLevelMultiplier = 0.75f;
+        }
+        else if (health > 25)
+        {
+            threatLevelMultiplier = 0.6f;
+        }
+        else
+        {
+            threatLevelMultiplier = 0.5f;
+        }
+
+        if (!hasBeenEngaged && deaths > 0)
         {
             hasBeenEngaged = true;
             currentEC += Time.deltaTime;
-            pd.engagedCounter.Add(currentEC);
+            playerData.engagedCounter.Add(currentEC);
             currentEC = 0;
         }
 
-        if (health <= 0)
+        if (health <= 0 && !isDead)
         {
             deaths++;
             isDead = true;
-            gameObject.SetActive(false);
             updateKD();
+            Dead();
+            deathCoolDown = 1f;
         }
+        return isDead;
+    }
+
+    void Dead()
+    {
+        if (isPlayer)
+        {
+            transform.position = deathPoint.transform.position;
+        }
+        else
+        {
+            transform.position = new Vector3(transform.position.x, -5, transform.position.z);
+            GetComponent<Rigidbody>().useGravity = false;
+        }
+    }
+
+    public bool IsDead()
+    {
         return isDead;
     }
 
     public PlayerData OutputData()
     {
-        pd.averageEC = 0;
-        for (int i = 0; i < pd.engagedCounter.Count; i++)
+        playerData.averageEC = 0;
+        for (int i = 0; i < playerData.engagedCounter.Count; i++)
         {
-            pd.averageEC += pd.engagedCounter[i];
+            playerData.averageEC += playerData.engagedCounter[i];
         }
-        pd.averageEC /= pd.engagedCounter.Count;
+        playerData.averageEC /= playerData.engagedCounter.Count;
+        playerData.currentKD = kills / deaths;
 
-        return pd;
+        return playerData;
     }
 }

@@ -17,8 +17,11 @@ public class Enemy : MonoBehaviour
     [HideInInspector]
     public Locations target;
     protected float nextState;
-    public bool dontShoot;
 
+    int layerMask;
+    bool enemyFound, respawned;
+    Player targetPlayer;
+    List<Player> enemies;
     // Start is called before the first frame update
     void Awake()
     {
@@ -29,8 +32,13 @@ public class Enemy : MonoBehaviour
         target = potentialLocations[Random.Range(0, potentialLocations.Length)];
         agent.SetDestination(target.transform.position);
         isRunning = true;
+        enemies = new List<Player>();
+        enemyFound = false;
+        respawned = false;
 
-        //Player.Input.SwitchToAK = true;
+        layerMask |= 1 << 9;
+        layerMask |= 1 << 10;
+        layerMask = ~layerMask;
     }
 
     // Update is called once per frame
@@ -52,12 +60,41 @@ public class Enemy : MonoBehaviour
                 isRunning = false;
                 nextState = Random.Range(3f, 12f);
             }
+            enemyFound = false;
         }
         else
         {
-            var look = controller.transform.position - transform.position;
-            player.Input.LookX = look.x;
-            player.Input.LookZ = look.z;
+            // My code ------------------------------------------------------------------
+            if (!enemyFound)
+            {
+                float closest = 10000;
+                foreach (Player p in enemies)
+                {
+                    RaycastHit hit;
+                    if (Physics.Raycast(gameObject.transform.position, (p.transform.position - gameObject.transform.position), out hit, 50, layerMask))
+                    {
+                        if (hit.collider.TryGetComponent<Player>(out Player r))
+                        {
+                            float c = Vector3.Distance(transform.position, r.transform.position);
+                            if (c < closest)
+                            {
+                                closest = c;
+                                targetPlayer = r;
+                                enemyFound = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (enemyFound)
+            {
+                var look = targetPlayer.transform.position - transform.position;
+                player.Input.LookX = look.x;
+                player.Input.LookZ = look.z;
+            }
+            //--------------------------------------------------------------------------
+
 
             if (nextState < 0)
             {
@@ -68,6 +105,7 @@ public class Enemy : MonoBehaviour
                 target = potentialLocations[targetIndex];
                 target.enemyGoal = this;
                 agent.SetDestination(target.transform.position);
+                respawned = false;
             }
         }
 
@@ -82,10 +120,66 @@ public class Enemy : MonoBehaviour
             player.Input.RunX = 0;
             player.Input.RunZ = 0;
         }
-        player.Input.Shoot = isRunning == !isRunning && !player.Debug && !dontShoot;
-        player.Input.ShootTarget = controller.transform.position + Vector3.up * 1.1f;
 
+        if (respawned)
+        {
+            player.Input.Shoot = false;
+        }
+        else 
+        {
+            player.Input.Shoot = !isRunning;
+        }
 
         Debug.DrawLine(transform.position + Vector3.up, transform.position + Vector3.up + agent.desiredVelocity * 10);
+    }
+
+    // code onwards is mine
+    private void OnTriggerEnter(Collider other)
+    {
+        Player p;
+        if (other.gameObject.TryGetComponent<Player>(out p))
+        {
+            if (p.getTeam() != player.getTeam())
+            {
+                if (!enemies.Contains(p))
+                {
+                    enemies.Add(p);
+                }
+            }
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        //int x = enemies.Count;
+        //if (x > 0)
+        //{ 
+        //    for (int i = 0; i < x; i++)
+        //    {
+        //        if (enemies[i].IsDead())
+        //        {
+        //            enemies.Remove(enemies[i]);
+        //        }
+        //    }
+        //}
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        Player p;
+        if (other.gameObject.TryGetComponent<Player>(out p))
+        {
+            if (enemies.Contains(p))
+            {
+                enemies.Remove(p);
+            }
+        }
+    }
+
+    public void Respawned()
+    {
+        isRunning = false;
+        nextState = 0.2f;
+        respawned = true;
     }
 }

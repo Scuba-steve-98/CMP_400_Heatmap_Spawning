@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using System.IO;
 
 public class GameManager : MonoBehaviour
 {
@@ -30,7 +32,9 @@ public class GameManager : MonoBehaviour
     bool trigger = false;
 
     float gameProgress, team1KD, team2KD, timer, team1Threat, team2Threat;
-    
+
+    string filename = "";
+
     Player[] players;
 
     // Start is called before the first frame update
@@ -42,6 +46,17 @@ public class GameManager : MonoBehaviour
         team1KD = 0;
         team2KD = 0;
         timer = 0;
+        if (gameType == GAMETYPE.TDM)
+        {
+            gameTime = 600;
+            scoreLimit = 75;
+        }
+        else
+        {
+            gameTime = 300;
+            scoreLimit = 35;
+        }
+        
 
         if (noOfPlayers % 2 == 0)
         {
@@ -52,9 +67,10 @@ public class GameManager : MonoBehaviour
             playersInTeam2++;
         }
 
-        Debug.Log(noOfPlayers + " " + playersInTeam);
         ranking = new int[noOfPlayers];
         playersScore = new int[noOfPlayers];
+        filename = Application.dataPath + "/CSV_Files/" + spawnType + "_" + gameType + "_" + SceneManager.GetActiveScene().name + ".csv";
+        Debug.Log(filename);
     }
 
     // Update is called once per frame
@@ -108,7 +124,8 @@ public class GameManager : MonoBehaviour
 
         if (timer >= gameTime)
         {
-            //game Over
+            Debug.Log("Game Over: " + highestScore + "   Time: " + Time.time);
+            GameOver();
         }
 
         switch (gameType)
@@ -180,12 +197,13 @@ public class GameManager : MonoBehaviour
             highestScore = teamScore[team];
             teamLead = team;
 
-            gameProgress = scoreLimit / highestScore;
+            gameProgress = (float)highestScore / (float)scoreLimit;
         }
 
-        if (highestScore == scoreLimit)
+        if (highestScore >= scoreLimit)
         {
-            // game over
+            Debug.Log("Game Over: " + highestScore + "   Time: " + Time.time);
+            GameOver();
         }
     }
 
@@ -213,18 +231,51 @@ public class GameManager : MonoBehaviour
             {
                 teamLoss = 0;
             }
-            gameProgress = scoreLimit / highestScore;
+            gameProgress = (float)highestScore / (float)scoreLimit;
         }
-        team1KD = teamScore[0] / teamDeaths[0];
-        team2KD = teamScore[1] / teamDeaths[1];
 
-        team1Threat = (1 - ((teamScore[0] - teamScore[1]) / scoreLimit * (team1KD - team2KD)));
+        if (teamDeaths[0] == 0)
+        {
+            team1KD = (float)teamScore[0] / 1;
+        }
+        else
+        {
+            team1KD = (float)teamScore[0] / (float)teamDeaths[0];
+        }
+        
+        if (teamDeaths[1] == 0)
+        {
+            team2KD = (float)teamScore[1] / 1;
+        }
+        else
+        {
+            team2KD = (float)teamScore[1] / (float)teamDeaths[1];
+        }
+        float multiplier = 1 - ((float)Mathf.Abs(teamScore[0] - teamScore[1]) / (float)scoreLimit);
 
-        team2Threat = (1 - ((teamScore[1] - teamScore[0]) / scoreLimit * (team2KD - team1KD)));
+
+        if (team1KD == 0)
+        {
+            team1Threat = multiplier;
+        }
+        else
+        {
+            team1Threat = team1KD * multiplier;
+        }
+
+        if (team2KD == 0)
+        {
+            team2Threat = multiplier;
+        }
+        else
+        {
+            team2Threat = team2KD * multiplier;
+        }
 
         if (highestScore == scoreLimit)
         {
-            // game over
+            Debug.Log("Game Over: " + highestScore + "   Time: " + Time.time);
+            GameOver();
         }
     }
 
@@ -273,5 +324,72 @@ public class GameManager : MonoBehaviour
     public SPAWN_TYPE getSpawnType()
     {
         return spawnType;
+    }
+
+    public int getGoal()
+    {
+        return scoreLimit;
+    }
+
+
+    void GameOver()
+    {
+        Debug.Log("Game Over");
+        WriteToCSV();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+
+    void WriteToCSV()
+    {
+        TextWriter playerData;
+        int iteration;
+        if (!File.Exists(filename))
+        {
+            playerData = new StreamWriter(filename, false);
+            if (isTDM())
+            {
+                playerData.WriteLine("Player, Average Time to Encounter, Kills, Deaths, Current KD, Game RunTime, Team");
+            }
+            else
+            {
+                playerData.WriteLine("Player, Average Time to Encounter, Kills, Deaths, Current KD, Game RunTime");
+            }
+            
+            playerData.Close();
+            iteration = 1;
+        }
+        else
+        {
+            string[] i = File.ReadAllLines(filename);
+            iteration = int.Parse(i[i.Length - 1]) + 1;
+            Debug.Log(iteration);
+
+            playerData = new StreamWriter(filename, true);
+            playerData.WriteLine();
+            playerData.WriteLine();
+            playerData.Close();
+        }
+
+        playerData = new StreamWriter(filename, true);
+        foreach (Player p in players)
+        {
+            if (isTDM())
+            {
+                playerData.WriteLine(p.gameObject.name + "," + p.OutputData().averageEC + "," + p.kills + "," + p.deaths + "," + p.OutputData().currentKD + "," + Time.timeSinceLevelLoad + "," + p.getTeam());
+            }
+            else
+            {
+                playerData.WriteLine(p.gameObject.name + "," + p.OutputData().averageEC + "," + p.kills + "," + p.deaths + "," + p.OutputData().currentKD + "," + Time.timeSinceLevelLoad);
+            }
+            
+        }
+        playerData.WriteLine(iteration);
+        playerData.Close();
+
+        if (iteration == 100)
+        {
+            UnityEditor.EditorApplication.isPlaying = false;
+        }
     }
 }

@@ -48,7 +48,6 @@ public class Controller : MonoBehaviour
         var runDirection = characterForward * (Input.GetAxisRaw("Vertical")) + characterLeft * (Input.GetAxisRaw("Horizontal"));
         LookDirection = Quaternion.AngleAxis(InputRotationY, characterLeft) * characterForward;
 
-
         //set player values
         Player.Input.RunX = runDirection.x;
         Player.Input.RunZ = runDirection.z;
