@@ -4,5 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Fuzzy/Fuzzy Battle Creek.unity
+    guid: f5574eab453df654f984ffbbd65dea90
+  - enabled: 1
+    path: Assets/Scenes/Rule Based/RB Battle Creek.unity
+    guid: cc22d500a24daf54f9b7233826ad920e
   m_configObjects: {}

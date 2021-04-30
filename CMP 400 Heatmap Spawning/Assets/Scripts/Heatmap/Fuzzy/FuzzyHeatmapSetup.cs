@@ -13,6 +13,8 @@ public class FuzzyHeatmapSetup : MonoBehaviour
 
     FuzzyHeatmapData heatmapData;
 
+    GameManager gm;
+
     [SerializeField]
     GameObject bottomLeftObj;
 
@@ -71,5 +73,13 @@ public class FuzzyHeatmapSetup : MonoBehaviour
             }
         }
         heatmapData.addTiles(tiles);
+        gm = FindObjectOfType<GameManager>();
+        if (gm.isHaloBattleCreek)
+        {
+            if (!TryGetComponent<BoxCollider>(out BoxCollider bc))
+            {
+                Destroy(GetComponent<MeshRenderer>());
+            }
+        }
     }
 }

@@ -126,22 +126,47 @@ public class RBSpawningSelector : MonoBehaviour
         if (tiles_[0].getEnemiesSeen() < tiles_[1].getEnemiesSeen())
         {
             tiles_[0].setSpawn();
+            demo = tiles_;
             return tiles_[0].getLocation();
         }
         else
         {
             int x = 0;
-            while (tiles_[x].getEnemiesSeen() == tiles_[x + 1].getEnemiesSeen())
+            int q = 0;
+            for (int i = 0; i < tiles_.Length; i++)
             {
-                if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
+                if ((i + 1) < tiles_.Length)
                 {
-                    break;
+                    if (tiles_[i].getEnemiesSeen() == tiles_[i + 1].getEnemiesSeen())
+                    {
+                        if (tiles_[x].getClosest() > tiles_[x + 1].getClosest())
+                        {
+                            q = UnityEngine.Random.Range(0, i);
+                            tiles_[q].setSpawn();
+                            demo = tiles_;
+                            return tiles_[q].getLocation();
+                        }
+                    }
+                    else
+                    {
+                        q = UnityEngine.Random.Range(0, i);
+                        tiles_[q].setSpawn();
+                        demo = tiles_;
+                        return tiles_[q].getLocation();
+                    }
                 }
-                x++;
+                else
+                {
+                    q = UnityEngine.Random.Range(0, i);
+                    tiles_[q].setSpawn();
+                    demo = tiles_;
+                    return tiles_[q].getLocation();
+                }
             }
-            int q = UnityEngine.Random.Range(0, x);
+
+            q = UnityEngine.Random.Range(0, tiles_.Length - 1);
             tiles_[q].setSpawn();
-            Debug.Log(x);
+            demo = tiles_;
             return tiles_[q].getLocation();
         }
     }
@@ -233,6 +258,12 @@ public class RBSpawningSelector : MonoBehaviour
             {
                 if ((i+1) < tiles_.Length)
                 {
+                    if (tiles_[i].getEnemiesSeen() != tiles_[i + 1].getEnemiesSeen())
+                    {
+                        q = UnityEngine.Random.Range(0, i);
+                        tiles_[q].setSpawn();
+                        break;
+                    }
                     if (tiles_[i].getClosest() > tiles_[i + 1].getClosest())
                     {
                         q = UnityEngine.Random.Range(0, i);

@@ -18,6 +18,9 @@ public class GameManager : MonoBehaviour
     [SerializeField, Range(5, 15)]
     int gameTime = 10;
 
+    [SerializeField]
+    public bool isHaloBattleCreek = false;
+
     int noOfPlayers;
     int playersInTeam;
     int playersInTeam2;
@@ -71,6 +74,7 @@ public class GameManager : MonoBehaviour
         playersScore = new int[noOfPlayers];
         filename = Application.dataPath + "/CSV_Files/" + spawnType + "_" + gameType + "_" + SceneManager.GetActiveScene().name + ".csv";
         Debug.Log(filename);
+        Time.timeScale = 2;
     }
 
     // Update is called once per frame
@@ -387,7 +391,11 @@ public class GameManager : MonoBehaviour
         playerData.WriteLine(iteration);
         playerData.Close();
 
-        if (iteration == 100)
+        if (iteration == 100 && spawnType == SPAWN_TYPE.FUZZY)
+        {
+            SceneManager.LoadScene(1);
+        }        
+        else if (iteration == 100 && spawnType == SPAWN_TYPE.RULE_BASED)
         {
             UnityEditor.EditorApplication.isPlaying = false;
         }

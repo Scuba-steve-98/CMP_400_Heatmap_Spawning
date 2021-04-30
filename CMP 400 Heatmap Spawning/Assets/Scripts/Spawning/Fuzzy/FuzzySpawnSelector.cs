@@ -107,7 +107,6 @@ public class FuzzySpawnSelector : MonoBehaviour
 
                 if (Physics.Raycast(ray, out hit, 100, layerMask))
                 {
-
                     if (hit.collider.gameObject == enemy.gameObject)
                     {
                         enemies++;
@@ -167,13 +166,7 @@ public class FuzzySpawnSelector : MonoBehaviour
                 }
             }
 
-            do
-            {
-                q = UnityEngine.Random.Range(0, tiles_.Count - 1);
-                Debug.Log(q);
-            } while (q < 0 || q >= tiles_.Count - 1);
-            Debug.Log(q);
-
+            q = UnityEngine.Random.Range(0, tiles_.Count - 1);
             tiles_[q].setSpawn();
             demo = tiles_;
             return tiles_[q].getLocation();
@@ -275,6 +268,12 @@ public class FuzzySpawnSelector : MonoBehaviour
             {
                 if ((i + 1) < tiles_.Count)
                 {
+                    if (tiles_[i].getEnemiesSeen() != tiles_[i + 1].getEnemiesSeen())
+                    {
+                        q = UnityEngine.Random.Range(0, i);
+                        tiles_[q].setSpawn();
+                        break;
+                    }
                     if (tiles_[i].getClosest() > tiles_[i + 1].getClosest())
                     {
                         q = UnityEngine.Random.Range(0, i);
