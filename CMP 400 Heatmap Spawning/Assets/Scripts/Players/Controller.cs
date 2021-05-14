@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Controller : MonoBehaviour
 {
-    // this script is solely from the tutorial
+    // this script is from the tutorial
     //---------------------- tutorial is found at URL https://www.youtube.com/watch?v=qL1toYXm_Sc&ab_channel=DitzelGames
     //---------------------- youtube channel is DitzelGames
 

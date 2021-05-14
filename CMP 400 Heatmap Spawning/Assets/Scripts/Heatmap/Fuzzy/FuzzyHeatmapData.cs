@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class FuzzyHeatmapData : MonoBehaviour
 {
+    // initialises fuzzy variables
     DANGER dangerLevel = (DANGER)10;
     DANGER targetLevel = (DANGER)5;
     DANGER team1Level = (DANGER)10;
@@ -13,7 +14,7 @@ public class FuzzyHeatmapData : MonoBehaviour
     DANGER friendly2Level = (DANGER)10;
 
     //declaring variables
-    int width, bredth, layerMask, scale, goal, loopCounter;
+    int width, bredth, layerMask, scale;
 
     float distance, colliderRadius, team1Threat, team2Threat, team1Friendly, team2Friendly;
 
@@ -141,11 +142,9 @@ public class FuzzyHeatmapData : MonoBehaviour
             array1[i] = new PossibleFuzzySpawns();
             array2[i] = new PossibleFuzzySpawns();
         }
-
-        goal = gameManager_.getGoal();
     }
 
-
+    // creates the list of tiles
     public void addTiles(List<FuzzyTiles> ft)
     {
         if (tilesList == null)
@@ -161,6 +160,7 @@ public class FuzzyHeatmapData : MonoBehaviour
         // resets tiles closeness
         resetList();
 
+        // calculates the target level based on the game mode
         if (gameManager_.isTDM())
         {
             float currentThreatLevel = threatLevel * gameManager_.getTeamThreat(Mathf.Abs(team - 1));
@@ -183,7 +183,6 @@ public class FuzzyHeatmapData : MonoBehaviour
                 }
                 currentThreatMultiplier /= 200;
                 targetLevel = getFuzzyDangerLevel(currentThreatMultiplier);
-                Debug.Log("Target Level: " + targetLevel + ": " + currentThreatMultiplier + "    Threat Level: " + threatLevel + "   KD: " + kills + "/" + deaths);
             }
             else
             {
@@ -195,7 +194,6 @@ public class FuzzyHeatmapData : MonoBehaviour
                 }
                 currentThreatMultiplier /= 200;
                 targetLevel = getFuzzyDangerLevel(currentThreatMultiplier);
-                Debug.Log("Target Level: " + targetLevel + ": " + currentThreatMultiplier + "    Threat Level: " + threatLevel + "   KD: " + kills + "/" + deaths);
             }
         }
 
@@ -226,12 +224,13 @@ public class FuzzyHeatmapData : MonoBehaviour
                     {
                         if (hit[c].collider.GetComponentInParent<Player>().getTeam() == 0)
                         {
+                            // gets the data for calculating the team threat and friendly levels
                             float threat = hit[c].collider.GetComponentInParent<Player>().getThreatLevel();
                             float friendly = hit[c].collider.GetComponentInParent<Player>().getFriendLevel();
-
                             colliderRadius = hit[c].collider.transform.localScale.x;
-                            distance = Vector3.Distance(rayStart, hit[c].transform.position);
 
+                            // calculates the threat level for the tile
+                            distance = Vector3.Distance(rayStart, hit[c].transform.position);
                             team1Threat += Mathf.Lerp(threat, 0, distance / (colliderRadius / 2f));
                             if (team1Threat >= 200)
                             {
@@ -245,12 +244,13 @@ public class FuzzyHeatmapData : MonoBehaviour
                         }
                         else if (hit[c].collider.GetComponentInParent<Player>().getTeam() == 1)
                         {
+                            // gets the data for calculating the team threat and friendly levels
                             float threat = hit[c].collider.GetComponentInParent<Player>().getThreatLevel();
                             float friendly = hit[c].collider.GetComponentInParent<Player>().getFriendLevel();
-
                             colliderRadius = hit[c].collider.transform.localScale.x;
-                            distance = Vector3.Distance(rayStart, hit[c].transform.position);
 
+                            // calculates the threat level for the tile
+                            distance = Vector3.Distance(rayStart, hit[c].transform.position);
                             team2Threat += Mathf.Lerp(threat, 0, distance / (colliderRadius / 2f));
                             if (team2Threat >= 200)
                             {
@@ -282,13 +282,16 @@ public class FuzzyHeatmapData : MonoBehaviour
 
             if (gameManager_.isTDM())
             {
+                // Fuzzifies the values
                 team1Level = getFuzzyDangerLevel(team1Threat / 200);
                 team2Level = getFuzzyDangerLevel(team2Threat / 200);
                 friendly1Level = getFuzzyDangerLevel(team1Friendly / 90);
                 friendly2Level = getFuzzyDangerLevel(team2Friendly / 90);
 
+                // sets values for the tiles
                 tilesList[i].setValues(team1Level, team2Level, friendly1Level, friendly2Level);
 
+                // checks to see if the fuzzy outputs match and adds if it does
                 int close = Mathf.Abs((int)team1Level - (int)targetLevel);
                 if (close == 0)
                 {
@@ -313,8 +316,10 @@ public class FuzzyHeatmapData : MonoBehaviour
                 }
             }
         }
+        // checks to see if there is enough tiles
         if (possibleFFA.Count < 35 && !gameManager_.isTDM())
         {
+            // repeats the last steps by checking values to get closest
             for (int i = 0; i < possibleFFA.Count; i++)
             {
                 array1[i] = possibleFFA[i];
@@ -332,9 +337,11 @@ public class FuzzyHeatmapData : MonoBehaviour
             possibleFFA.Clear();
             possibleFFA.AddRange(array1);
         }
-        
+
+        // checks to see if there is enough tiles
         if (possibleTeam1.Count < 35 && gameManager_.isTDM())
         {
+            // repeats the last steps by checking values to get closest
             for (int i = 0; i < possibleTeam1.Count; i++)
             {
                 array1[i] = possibleTeam1[i];
@@ -355,6 +362,7 @@ public class FuzzyHeatmapData : MonoBehaviour
 
         if (possibleTeam2.Count < 35 && gameManager_.isTDM())
         {
+            // repeats the last steps by checking values to get closest
             for (int i = 0; i < possibleTeam2.Count; i++)
             {
                 array2[i] = possibleTeam2[i];
@@ -373,7 +381,7 @@ public class FuzzyHeatmapData : MonoBehaviour
             possibleTeam2.AddRange(array2);
         }
 
-
+        // passes tiles through to the spawn selector
         if (gameManager_.isTDM())
         {
             FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
@@ -395,7 +403,6 @@ public class FuzzyHeatmapData : MonoBehaviour
             FuzzySpawnSelector flss = FindObjectOfType<FuzzySpawnSelector>();
             location = flss.chooseFFASpawnLocation(possibleFFA);
             location.y += 1.1f;
-            loopCounter = 0;
             return location;
         }
     }
@@ -523,27 +530,5 @@ public class FuzzyHeatmapData : MonoBehaviour
             return width * scale;
         else
             return bredth * scale;
-    }
-
-    public void setTargetDangerLevel(float x)
-    {
-        targetLevel = getFuzzyDangerLevel(x);
-    }
-
-    public List<PossibleFuzzySpawns> getFFATiles()
-    {
-        return possibleFFA;
-    }
-
-    public List<PossibleFuzzySpawns> getTDMTiles(int team)
-    {
-        if (team == 0)
-        {
-            return possibleTeam1;
-        }
-        else
-        {
-            return possibleTeam2;
-        }
     }
 }

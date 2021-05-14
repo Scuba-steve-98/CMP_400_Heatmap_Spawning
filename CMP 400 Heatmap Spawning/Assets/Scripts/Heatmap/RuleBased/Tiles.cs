@@ -8,12 +8,6 @@ public class Tiles
     Vector3 location;
     public float closenessToTarget;
 
-    public Tiles(float threat, Vector3 pos)
-    {
-        threatLevel = threat;
-        location = pos;
-    }
-
 
     public Tiles(Vector3 pos)
     {
@@ -34,38 +28,6 @@ public class Tiles
 
         team1Threat -= friendly1Level;
         team2Threat -= friendly2Level;
-    }
-
-
-    public float getThreatLevel()
-    {
-        return threatLevel;
-    }
-
-
-    public float getTeamThreatLevel(int team)
-    {
-        if (team == 0)
-        {
-            return team1Threat;
-        }
-        else
-        {
-            return team2Threat;
-        }
-    }
-
-
-    public float getFriendLevel(int team)
-    {
-        if (team == 0)
-        {
-            return friendly1Level;
-        }
-        else
-        {
-            return friendly2Level;
-        }
     }
 
 

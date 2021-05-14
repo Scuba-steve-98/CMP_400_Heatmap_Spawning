@@ -21,16 +21,18 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     public bool isHaloBattleCreek = false;
 
+    [SerializeField]
+    public bool isTestingLifespan = true;
+
+    [SerializeField]
+    bool isDemoing = true;
+
     int noOfPlayers;
     int playersInTeam;
-    int playersInTeam2;
     int highestScore;
-    int teamLead, teamLoss;
 
     int[] teamScore;
     int[] teamDeaths;
-    int[] ranking;
-    int[] playersScore;
 
     bool trigger = false;
 
@@ -65,24 +67,37 @@ public class GameManager : MonoBehaviour
         {
             playersInTeam = noOfPlayers / 2;
         }
+
+        if (!isDemoing)
+        {
+            // determines filepath based on testing parameters
+            if (isTestingLifespan)
+            {
+                filename = Application.dataPath + "/CSV_Files/averageLifespan_" + gameType + "_" + SceneManager.GetActiveScene().name + ".csv";
+            }
+            else
+            {
+                filename = Application.dataPath + "/CSV_Files/" + spawnType + "_" + gameType + "_" + SceneManager.GetActiveScene().name + ".csv";
+            }
+            Debug.Log(filename);
+            Time.timeScale = 2;
+        }
         else
         {
-            playersInTeam2++;
+            Time.timeScale = 1;
         }
 
-        ranking = new int[noOfPlayers];
-        playersScore = new int[noOfPlayers];
-        filename = Application.dataPath + "/CSV_Files/" + spawnType + "_" + gameType + "_" + SceneManager.GetActiveScene().name + ".csv";
-        Debug.Log(filename);
-        Time.timeScale = 2;
     }
 
     // Update is called once per frame
     void Update()
     {
+        // single use conditional statement used to ensure things are initialised correctly.
         if (!trigger)
         {
             trigger = true;
+
+            // initialises based on the game mode and the spawning type
             switch (gameType)
             {
                 case GAMETYPE.TEST:
@@ -124,32 +139,22 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        // used to keep track of the game's runtime
         timer += Time.deltaTime;
 
+        // ends game 
         if (timer >= gameTime)
         {
-            Debug.Log("Game Over: " + highestScore + "   Time: " + Time.time);
             GameOver();
         }
 
-        switch (gameType)
+        if (Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Escape))
         {
-            case GAMETYPE.TEST:
-                break;
-
-            case GAMETYPE.FFA:
-                FFA();
-                break;
-
-            case GAMETYPE.TDM:
-                TDM();
-                break;
-
-            default:
-                break;
+            SceneManager.LoadScene(0);
         }
     }
 
+    // sets players team based on game mode
     void FFAInit()
     {
         for (int i = 0; i < noOfPlayers; i++)
@@ -163,10 +168,6 @@ public class GameManager : MonoBehaviour
         if (noOfPlayers % 2 == 0)
         {
             playersInTeam = noOfPlayers / 2;
-        }
-        else
-        {
-            playersInTeam2++;
         }
 
         for (int i = 0; i < noOfPlayers; i++)
@@ -182,16 +183,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void FFA()
-    {
-
-    }
-
-    void TDM()
-    {
-
-    }
-
+    // keeps track of scoring to know if the game ends
     public void updateFFAScore(int team)
     {
         teamScore[team]++;
@@ -199,18 +191,17 @@ public class GameManager : MonoBehaviour
         if (teamScore[team] > highestScore)
         {
             highestScore = teamScore[team];
-            teamLead = team;
 
             gameProgress = (float)highestScore / (float)scoreLimit;
         }
 
         if (highestScore >= scoreLimit)
         {
-            Debug.Log("Game Over: " + highestScore + "   Time: " + Time.time);
             GameOver();
         }
     }
-
+    
+    // keeps track of scoring to know if the game ends
     public void updateTDMScore(int team)
     {
         teamScore[team]++;
@@ -226,18 +217,11 @@ public class GameManager : MonoBehaviour
         if (teamScore[team] > highestScore)
         {
             highestScore = teamScore[team];
-            teamLead = team;
-            if (teamLead == 0)
-            {
-                teamLoss = 1;
-            }
-            else
-            {
-                teamLoss = 0;
-            }
             gameProgress = (float)highestScore / (float)scoreLimit;
         }
 
+
+        // sets team threat multipliers
         if (teamDeaths[0] == 0)
         {
             team1KD = (float)teamScore[0] / 1;
@@ -276,13 +260,15 @@ public class GameManager : MonoBehaviour
             team2Threat = team2KD * multiplier;
         }
 
+
+        // ends game
         if (highestScore == scoreLimit)
         {
-            Debug.Log("Game Over: " + highestScore + "   Time: " + Time.time);
             GameOver();
         }
     }
 
+    // checks game mode
     public bool isTDM()
     {
         if (gameType == GAMETYPE.TDM)
@@ -295,23 +281,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // gets how far the game is to completion
     public float getGameProgress()
     {
         return gameProgress;
     }
 
-    public float getTeamKD(int team)
-    {
-        if (team == 0)
-        {
-            return team1KD;
-        }
-        else
-        {
-            return team2KD;
-        }
-    }
-
+    // gets the threat multipliers for the teams
     public float getTeamThreat(int team)
     {
         if (team == 0)
@@ -324,45 +300,62 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
+    // gets what spawn type is being used
     public SPAWN_TYPE getSpawnType()
     {
         return spawnType;
     }
 
+    // returns how many kills is needed to end the game
     public int getGoal()
     {
         return scoreLimit;
     }
 
-
+    // ends the game
     void GameOver()
     {
-        Debug.Log("Game Over");
-        WriteToCSV();
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        if (isDemoing)
+        {
+            SceneManager.LoadScene(0);
+        }
+        else
+        {
+            WriteToCSV();
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 
-
+    // exports the data from demoing
     void WriteToCSV()
     {
         TextWriter playerData;
         int iteration;
+
+        // creates the headers if the file doesnt exist
         if (!File.Exists(filename))
         {
             playerData = new StreamWriter(filename, false);
-            if (isTDM())
+            if (isTestingLifespan)
             {
-                playerData.WriteLine("Player, Average Time to Encounter, Kills, Deaths, Current KD, Game RunTime, Team");
+                playerData.WriteLine("Player, Average Lifespan, Longest Life, Shortest Life, Kills, Deaths");
             }
             else
             {
-                playerData.WriteLine("Player, Average Time to Encounter, Kills, Deaths, Current KD, Game RunTime");
+                if (isTDM())
+                {
+                    playerData.WriteLine("Player, Average Time to Encounter, Kills, Deaths, Current KD, Game RunTime, Team");
+                }
+                else
+                {
+                    playerData.WriteLine("Player, Average Time to Encounter, Kills, Deaths, Current KD, Game RunTime");
+                }
             }
             
             playerData.Close();
             iteration = 1;
         }
+        // gets how many time the game has run
         else
         {
             string[] i = File.ReadAllLines(filename);
@@ -375,29 +368,35 @@ public class GameManager : MonoBehaviour
             playerData.Close();
         }
 
+        // outputs the data to the CSV
         playerData = new StreamWriter(filename, true);
         foreach (Player p in players)
         {
-            if (isTDM())
+            if (isTestingLifespan)
             {
-                playerData.WriteLine(p.gameObject.name + "," + p.OutputData().averageEC + "," + p.kills + "," + p.deaths + "," + p.OutputData().currentKD + "," + Time.timeSinceLevelLoad + "," + p.getTeam());
+                playerData.WriteLine(p.gameObject.name + "," + p.OutputData().averageLifespan + "," + p.OutputData().longestLifespan + "," + p.OutputData().shortestLifespan +"," + p.kills + "," + p.deaths);
             }
             else
             {
-                playerData.WriteLine(p.gameObject.name + "," + p.OutputData().averageEC + "," + p.kills + "," + p.deaths + "," + p.OutputData().currentKD + "," + Time.timeSinceLevelLoad);
-            }
-            
+                if (isTDM())
+                {
+                    playerData.WriteLine(p.gameObject.name + "," + p.OutputData().averageEC + "," + p.kills + "," + p.deaths + "," + p.OutputData().currentKD + "," + Time.timeSinceLevelLoad + "," + p.getTeam());
+                }
+                else
+                {
+                    playerData.WriteLine(p.gameObject.name + "," + p.OutputData().averageEC + "," + p.kills + "," + p.deaths + "," + p.OutputData().currentKD + "," + Time.timeSinceLevelLoad);
+                }
+            }            
         }
         playerData.WriteLine(iteration);
         playerData.Close();
 
-        if (iteration == 100 && spawnType == SPAWN_TYPE.FUZZY)
+        // closes the game
+       if (iteration == 10)
         {
-            SceneManager.LoadScene(1);
-        }        
-        else if (iteration == 100 && spawnType == SPAWN_TYPE.RULE_BASED)
-        {
+#if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
+#endif
         }
     }
 }

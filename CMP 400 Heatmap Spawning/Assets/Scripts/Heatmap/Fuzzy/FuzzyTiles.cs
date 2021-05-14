@@ -17,14 +17,6 @@ public class FuzzyTiles
     CLOSENESS closeness = (CLOSENESS)6;
 
 
-    public FuzzyTiles(DANGER threat, Vector3 pos)
-    {
-        danger = threat;
-        location = pos;
-        // add no. enemies and distance later
-    }
-
-
     public FuzzyTiles(Vector3 pos)
     {
         location = pos;
@@ -69,31 +61,8 @@ public class FuzzyTiles
     }
 
 
-    public DANGER getFriendLevel(int team)
-    {
-        if (team == 0)
-        {
-            return friendly1;
-        }
-        else
-        {
-            return friendly2;
-        }
-    }
-
-
     public Vector3 getLocation()
     {
         return location;
-    }
-
-    public void setCloseness(CLOSENESS close)
-    {
-        closeness = close;
-    }
-
-    public CLOSENESS getCloseness()
-    {
-        return closeness;
     }
 }

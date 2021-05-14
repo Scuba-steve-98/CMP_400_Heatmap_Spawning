@@ -4,9 +4,6 @@ using UnityEngine;
 
 public class PossibleFuzzySpawns
 {
-    DANGER dangerLevel = (DANGER)6;
-    DANGER targetLevel = (DANGER)6;
-    FUZZY_OUTPUT fOutput = (FUZZY_OUTPUT)6;
     CLOSENESS closeness = (CLOSENESS)16;
     CLOSENESS friendlyCloseness = (CLOSENESS)6;
     ENEMIES_SEEN enemiesSeen = (ENEMIES_SEEN)3;
@@ -15,12 +12,6 @@ public class PossibleFuzzySpawns
     Vector3 location;
     bool isSpawn = false;
     int closenessToTarget;
-
-    //[SerializeField]
-    //AnimationCurve enemyCloseness;
-
-    //[SerializeField]
-    //AnimationCurve friendlyCloseness;
 
     public PossibleFuzzySpawns()
     {

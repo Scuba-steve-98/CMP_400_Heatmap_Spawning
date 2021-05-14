@@ -36,7 +36,7 @@ public class Enemy : MonoBehaviour
         enemyFound = false;
         respawned = false;
 
-        layerMask |= 1 << 9;
+        layerMask = 1 << 9;
         layerMask |= 1 << 10;
         layerMask = ~layerMask;
     }
@@ -65,6 +65,7 @@ public class Enemy : MonoBehaviour
         else
         {
             // My code ------------------------------------------------------------------
+            // finds closest seen enemy
             if (!enemyFound)
             {
                 float closest = 10000;
@@ -147,21 +148,6 @@ public class Enemy : MonoBehaviour
                 }
             }
         }
-    }
-
-    private void OnTriggerStay(Collider other)
-    {
-        //int x = enemies.Count;
-        //if (x > 0)
-        //{ 
-        //    for (int i = 0; i < x; i++)
-        //    {
-        //        if (enemies[i].IsDead())
-        //        {
-        //            enemies.Remove(enemies[i]);
-        //        }
-        //    }
-        //}
     }
 
     private void OnTriggerExit(Collider other)

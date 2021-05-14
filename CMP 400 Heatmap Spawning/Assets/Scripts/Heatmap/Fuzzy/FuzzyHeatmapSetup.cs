@@ -37,10 +37,12 @@ public class FuzzyHeatmapSetup : MonoBehaviour
         width = (int)planeSize.x / scale;
         bredth = (int)planeSize.z / scale;
 
+        // gets the positions of the plane corners
         bottomLeft = bottomLeftObj.transform.position;
         bottomRight = bottomRightObj.transform.position;
         topLeft = topLeftObj.transform.position;
 
+        // calculates the vector for moving the tiles position
         rightIncrementation = (bottomRight - bottomLeft) / width;
         forwardIncrementation = (topLeft - bottomLeft) / bredth;
 
@@ -56,6 +58,7 @@ public class FuzzyHeatmapSetup : MonoBehaviour
         // layer mask to only collide with objects on specific layer
         LayerMask tempLayerMask = 1 << 10;
 
+        // loops through and adds tiles to the list if it does not collide with any scenery
         for (int i = 0; i < width; i++)
         {
             for (int j = 0; j < bredth; j++)
@@ -72,6 +75,7 @@ public class FuzzyHeatmapSetup : MonoBehaviour
                 }
             }
         }
+        // passes the tiles through to the spawn selector
         heatmapData.addTiles(tiles);
         gm = FindObjectOfType<GameManager>();
         if (gm.isHaloBattleCreek)

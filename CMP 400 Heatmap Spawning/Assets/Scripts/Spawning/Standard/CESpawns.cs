@@ -26,14 +26,18 @@ public class CESpawns : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // resets variables
         FFABlockDistance = 100;
         team1Data[0] = 100;
         team2Data[0] = 100;
 
+        // loops through every player in the collision sphere
         for (int i = 0; i < players.Count; i++)
         {
+            // checks which game mode is being used
             if (gameManager_.isTDM())
             {
+                // gets the players team and calculates the block chance based on the players distance
                 if (players[i].getTeam() == 0)
                 {
                     float temp = Vector3.Distance(players[i].transform.position, transform.position);
@@ -87,6 +91,7 @@ public class CESpawns : MonoBehaviour
             }
             else
             {
+                // calculates the block chance based on distance
                 float temp = Vector3.Distance(players[i].transform.position, transform.position);
                 if (temp < FFABlockDistance)
                 {
@@ -123,11 +128,6 @@ public class CESpawns : MonoBehaviour
             return team2Data[0];
     }
 
-    public string getName()
-    {
-        return gameObject.name;
-    }
-
     public float sortArray(int team)
     {
         if (team == 0)
@@ -138,6 +138,7 @@ public class CESpawns : MonoBehaviour
             return team2Data[0];
     }
 
+    // controls what players are in the collision sphere
     private void OnTriggerEnter(Collider other)
     {
         Player p;

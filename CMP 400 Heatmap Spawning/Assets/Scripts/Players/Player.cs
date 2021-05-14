@@ -38,10 +38,9 @@ public class Player : MonoBehaviour
     public AudioClip AudioClipAK;
     public AudioClip AudioClipShot;
 
-    //protected Animator Animator;
     protected float Cooldown;
     protected AudioSource AudioSourcePlayer;
-    //---------------------------------------------
+    // code above is from tutorial
     //---------------------------------------------
     //---------------------------------------------
 
@@ -51,11 +50,15 @@ public class Player : MonoBehaviour
     [SerializeField]
     GameObject deathPoint;
 
+    // data for testing and outputting data
     public struct PlayerData
     {
         public List<float> engagedCounter;
         public float averageEC;
         public float currentKD;
+        public float averageLifespan;
+        public float shortestLifespan;
+        public float longestLifespan;
     }
 
     [HideInInspector]
@@ -71,15 +74,13 @@ public class Player : MonoBehaviour
     Renderer rend;
 
 
-    SPAWN_TYPE spawnType;
-
     [SerializeField, Range(0, 10)]
     float overallKD = 1;
 
     [SerializeField, Range(60, 100)]
     float baseThreat = 67;
 
-    float health, threatLevel, friendlyLevel, deathCoolDown, currentEC, threatLevelMultiplier;
+    float health, threatLevel, friendlyLevel, deathCoolDown, currentEC, threatLevelMultiplier, lifespan;
 
     [HideInInspector]
     public int kills, deaths;
@@ -98,7 +99,6 @@ public class Player : MonoBehaviour
     {
         // ------------------------- tutorial variables setup
         Rigidbody = GetComponent<Rigidbody>();
-        //Animator = GetComponent<Animator>();
         AudioSourcePlayer = GetComponent<AudioSource>();
         AKBack.SetActive(false);
         AKHand.SetActive(true);
@@ -115,6 +115,8 @@ public class Player : MonoBehaviour
         rend = GetComponent<Renderer>();
         deaths = 0;
         threatLevelMultiplier = 1;
+        lifespan = 0;
+        currentEC = 0;
 
         switch (gameManager_.getSpawnType())
         {
@@ -147,6 +149,10 @@ public class Player : MonoBehaviour
         }
 
         playerData.engagedCounter = new List<float>();
+        playerData.averageEC = 0;
+        playerData.averageLifespan = 0;
+        playerData.shortestLifespan = 0;
+        playerData.longestLifespan = 100;
 
         lineRenderer.startWidth = 0.01f;
         lineRenderer.endWidth = 0.01f;
@@ -173,17 +179,24 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // data for testing
+        if (!isDead)
+        {
+            lifespan += Time.deltaTime;
+        }
         if (deaths > 0 && !hasBeenEngaged && !isDead)
         {
             currentEC += Time.deltaTime;
         }
 
+        // time for respawn
         if (isDead && deathCoolDown > 0)
         {
             deathCoolDown -= Time.deltaTime;
         }
         else if (isDead && deathCoolDown <= 0)
         {
+            // respawns player based on spawning type
             switch(gameManager_.getSpawnType())
             {
                 case SPAWN_TYPE.RULE_BASED:
@@ -223,6 +236,7 @@ public class Player : MonoBehaviour
                 default:
                     break;
             }
+            // was meant to be for player testing but didn't get to that 
             if (!isPlayer)
             {
                 GetComponent<Rigidbody>().useGravity = true;
@@ -243,20 +257,16 @@ public class Player : MonoBehaviour
         {
             if (Cooldown <= 0)
             {
-                Vector3 shootVariation = UnityEngine.Random.insideUnitCircle;
-
-                // removed the animation and changed it to play based on what weapon is active
+                // removed the animation and changed it to play based on what weapon is active although no audio is implemented 
                 if (AKHand)
                 {
                     AudioSourcePlayer.PlayOneShot(AudioClipAK);
                     Cooldown = 0.2f;
-                    shootVariation *= 0.02f;
                 }
                 else
                 {
                     AudioSourcePlayer.PlayOneShot(AudioClipShot);
                     Cooldown = 1f;
-                    shootVariation *= 0.01f;
                 }
 
                 Vector3 shootOrigin = AKHand.transform.position + Vector3.forward * -0.2f;
@@ -299,6 +309,7 @@ public class Player : MonoBehaviour
                                 }
 
                                 updateKD();
+                                // data for testing
                                 if (!hasBeenEngaged && deaths > 0)
                                 {
                                     hasBeenEngaged = true;
@@ -309,6 +320,7 @@ public class Player : MonoBehaviour
                             }
                             else
                             {
+                                // data for testing
                                 if (!hasBeenEngaged && deaths > 0)
                                 {
                                     hasBeenEngaged = true;
@@ -322,8 +334,6 @@ public class Player : MonoBehaviour
                     }
                 }
                 gameObject.layer = 0;
-
-
             }
         }
 
@@ -350,17 +360,12 @@ public class Player : MonoBehaviour
     }
 
     // all code onwards is mine
-    void killedEnemy()
-    {
-        kills++;
-        updateKD();
-    }
-
-
     void updateKD()
     {
         threatLevel = 0;
         friendlyLevel = 0;
+
+        // calculates KD based on flow charts in dissertation
         if (deaths == 0)
         {
             if (gameManager_.getGameProgress() > 0.4f)
@@ -419,6 +424,7 @@ public class Player : MonoBehaviour
     }
     
 
+    // sets players team
     public void setTeam(int teamNo)
     {
         team = teamNo;
@@ -432,30 +438,37 @@ public class Player : MonoBehaviour
         }
     }
     
-
+    // gets what team the player is on
     public int getTeam()
     {
         return team;
     }
 
+    // returns the players threat multiplied by health multiplier
     public float getThreatLevel()
     {
         return threatLevel * threatLevelMultiplier;
     }
 
+    // returns the players friendly level
     public float getFriendLevel()
     {
         return friendlyLevel;
     }
 
+    // returns if the player is dead and damages the player
     public bool isShot(float dam)
     {
+        // ensures the player isn't killed again after being already dead
         if (isDead)
         {
             return false;
         }
+
+        // reduces players health
         health -= dam;
 
+        // sets health multiplier based on players health
         if (health == 100)
         {
             threatLevelMultiplier = 1;
@@ -473,6 +486,7 @@ public class Player : MonoBehaviour
             threatLevelMultiplier = 0.5f;
         }
 
+        // updates player data for testing
         if (!hasBeenEngaged && deaths > 0)
         {
             hasBeenEngaged = true;
@@ -481,8 +495,29 @@ public class Player : MonoBehaviour
             currentEC = 0;
         }
 
+        // kills player and updates testing data
         if (health <= 0 && !isDead)
         {
+            playerData.averageLifespan += lifespan;
+
+            if (deaths == 1)
+            {
+                playerData.shortestLifespan = lifespan;
+                playerData.longestLifespan = lifespan;
+            }
+            else if (deaths > 1)
+            {
+                if (lifespan < playerData.shortestLifespan)
+                {
+                    playerData.shortestLifespan = lifespan;
+                }
+
+                if (lifespan > playerData.longestLifespan)
+                {
+                    playerData.longestLifespan = lifespan;
+                }
+            }
+            lifespan = 0;
             deaths++;
             isDead = true;
             updateKD();
@@ -492,6 +527,7 @@ public class Player : MonoBehaviour
         return isDead;
     }
 
+    // was meant to remove players if theyre dead but doesn't really work for some reason
     void Dead()
     {
         if (isPlayer)
@@ -505,11 +541,13 @@ public class Player : MonoBehaviour
         }
     }
 
+    // returns if the player is dead
     public bool IsDead()
     {
         return isDead;
     }
 
+    // returns players data for outputting to CSV
     public PlayerData OutputData()
     {
         playerData.averageEC = 0;
@@ -517,8 +555,22 @@ public class Player : MonoBehaviour
         {
             playerData.averageEC += playerData.engagedCounter[i];
         }
-        playerData.averageEC /= playerData.engagedCounter.Count;
-        playerData.currentKD = kills / deaths;
+
+        if (playerData.engagedCounter.Count > 0)
+        {
+            playerData.averageEC /= playerData.engagedCounter.Count;
+        }
+
+
+        if (deaths == 0)
+        {
+            playerData.currentKD = kills / 1;
+        }
+        else
+        {
+            playerData.currentKD = kills / deaths;
+            playerData.averageLifespan /= deaths;
+        }
 
         return playerData;
     }

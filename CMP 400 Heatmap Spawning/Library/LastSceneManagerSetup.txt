@@ -1,5 +1,5 @@
 sceneSetups:
-- path: Assets/Scenes/Fuzzy/Fuzzy Shipment.unity
+- path: Assets/Scenes/HCE/HCE Battle Creek TDM.unity
   isLoaded: 1
   isActive: 1
   isSubScene: 0
